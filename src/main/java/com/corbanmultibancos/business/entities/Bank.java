@@ -1,5 +1,7 @@
 package com.corbanmultibancos.business.entities;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.Column;
@@ -7,20 +9,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_bank")
 public class Bank {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	@Column(unique = true)
 	private Integer code;
-	
+
 	private String name;
+
+	@OneToMany(mappedBy = "bank")
+	private List<Proposal> proposals = new ArrayList<>();
 
 	public Bank() {
 	}
@@ -53,6 +59,10 @@ public class Bank {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public List<Proposal> getProposals() {
+		return proposals;
 	}
 
 	@Override
