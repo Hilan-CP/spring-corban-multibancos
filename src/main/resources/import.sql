@@ -19,18 +19,18 @@ INSERT INTO tb_employee(cpf, name, team_id) VALUES ('67661033020','José Jorge',
 INSERT INTO tb_employee(cpf, name, team_id) VALUES ('83405702003','Wagner Magno',4);
 INSERT INTO tb_employee(cpf, name, team_id) VALUES ('94926959011','George Lucas',1);
 
-INSERT INTO tb_user(employee_id, username, password) VALUES (1,'florinda','florinda123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (2,'ricardo','ricardo123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (3,'zenobia','zenobia123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (4,'suzete','suzete123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (5,'tereza','tereza123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (6,'joao','joao123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (7,'jose','jose123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (8,'wagner','wagner123');
-INSERT INTO tb_user(employee_id, username, password) VALUES (9,'george','george123');
-
 INSERT INTO tb_role(authority) VALUES ('GESTOR');
 INSERT INTO tb_role(authority) VALUES ('CONSULTOR');
+
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (1,'florinda','florinda123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (2,'ricardo','ricardo123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (3,'zenobia','zenobia123',1);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (4,'suzete','suzete123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (5,'tereza','tereza123',1);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (6,'joao','joao123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (7,'jose','jose123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (8,'wagner','wagner123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (9,'george','george123',2);
 
 INSERT INTO tb_customer(cpf, name, birth_date, phone) VALUES ('00066098645','SERGIO','1969-08-13','11930587328');
 INSERT INTO tb_customer(cpf, name, birth_date, phone) VALUES ('00384722288','FABIANA','1975-06-04','14937814172');

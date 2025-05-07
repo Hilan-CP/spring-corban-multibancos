@@ -33,15 +33,15 @@ public class Proposal {
 	private ProposalStatus status;
 
 	@ManyToOne
-	@JoinColumn(name = "employee_id")
+	@JoinColumn(name = "employee_id", nullable = false)
 	private Employee employee;
 
 	@ManyToOne
-	@JoinColumn(name = "customer_id")
+	@JoinColumn(name = "customer_id", nullable = false)
 	private Customer customer;
 
 	@ManyToOne
-	@JoinColumn(name = "bank_id")
+	@JoinColumn(name = "bank_id", nullable = false)
 	private Bank bank;
 
 	public Proposal() {
