@@ -62,59 +62,59 @@ public class BankServiceTests {
 	}
 	
 	@Test
-	public void findByIdShouldReturnBankDTOWhenExistingId() {
-		BankDTO bankDto = bankService.findById(existingId);
+	public void getBankByIdShouldReturnBankDTOWhenExistingId() {
+		BankDTO bankDto = bankService.getBankById(existingId);
 		Assertions.assertEquals(existingId, bankDto.getId());
 	}
 	
 	@Test
-	public void findByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.findById(nonExistingId));
+	public void getBankByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBankById(nonExistingId));
 	}
 	
 	@Test
-	public void findByCodeShouldReturnBankDTOWhenExistingCode() {
-		BankDTO bankDto = bankService.findByCode(existingCode);
+	public void getBankByCodeShouldReturnBankDTOWhenExistingCode() {
+		BankDTO bankDto = bankService.getBankByCode(existingCode);
 		Assertions.assertEquals(existingCode, bankDto.getCode());
 	}
 	
 	@Test
-	public void findByCodeShouldThrowResourceNotFoundExceptionWhenNonExistingCode() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.findByCode(nonExistingCode));
+	public void getBankByCodeShouldThrowResourceNotFoundExceptionWhenNonExistingCode() {
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBankByCode(nonExistingCode));
 	}
 	
 	@Test
-	public void findByNameShouldReturnBankDTOListWhenPartialName() {
-		List<BankDTO> bankDtoList = bankService.findByName(partialName);
+	public void getBankByNameShouldReturnBankDTOListWhenPartialName() {
+		List<BankDTO> bankDtoList = bankService.getBankByName(partialName);
 		Assertions.assertFalse(bankDtoList.isEmpty());
 	}
 	
 	@Test
-	public void findByNameShouldReturnBankDTOListWhenNonExistingName() {
-		List<BankDTO> bankDtoList = bankService.findByName(nonExistingName);
+	public void getBankByNameShouldReturnBankDTOListWhenNonExistingName() {
+		List<BankDTO> bankDtoList = bankService.getBankByName(nonExistingName);
 		Assertions.assertTrue(bankDtoList.isEmpty());
 	}
 	
 	@Test
-	public void findAllShouldReturnBankDTOList() {
-		List<BankDTO> bankDtoList = bankService.findAll();
+	public void getAllBanksShouldReturnBankDTOList() {
+		List<BankDTO> bankDtoList = bankService.getAllBanks();
 		Assertions.assertFalse(bankDtoList.isEmpty());
 	}
 	
 	@Test
-	public void insertShouldReturnBankDTO() {
-		BankDTO bankDto = bankService.insert(new BankDTO());
+	public void createBankShouldReturnBankDTO() {
+		BankDTO bankDto = bankService.createBank(new BankDTO());
 		Assertions.assertNotNull(bankDto.getId());
 	}
 	
 	@Test
-	public void updateShouldReturnBankDTOWhenExistingId() {
-		BankDTO bankDto = bankService.update(existingId, new BankDTO());
+	public void updateBankShouldReturnBankDTOWhenExistingId() {
+		BankDTO bankDto = bankService.updateBank(existingId, new BankDTO());
 		Assertions.assertEquals(existingId, bankDto.getId());
 	}
 	
 	@Test
-	public void updateShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.update(nonExistingId, new BankDTO()));
+	public void updateBankShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.updateBank(nonExistingId, new BankDTO()));
 	}
 }
