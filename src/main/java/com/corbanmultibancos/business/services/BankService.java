@@ -11,6 +11,7 @@ import com.corbanmultibancos.business.dto.BankDTO;
 import com.corbanmultibancos.business.entities.Bank;
 import com.corbanmultibancos.business.mappers.BankMapper;
 import com.corbanmultibancos.business.repositories.BankRepository;
+import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +19,7 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class BankService {
 	private static final String BANK_NOT_FOUND = "Banco não encontrado";
+	private static final String MULTIPLE_PARAMS = "Não é permitida a busca usando mais de um parâmetro";
 
 	@Autowired
 	private BankRepository bankRepository;
@@ -30,24 +32,19 @@ public class BankService {
 	}
 
 	@Transactional(readOnly = true)
-	public BankDTO getBankByCode(Integer code) {
-		Optional<Bank> result = bankRepository.findByCode(code);
-		Bank bank = result.orElseThrow(() -> new ResourceNotFoundException(BANK_NOT_FOUND));
-		return BankMapper.toDto(bank);
-	}
-
-	@Transactional(readOnly = true)
-	public List<BankDTO> getBankByName(String name) {
-		List<Bank> result = bankRepository.findByName(name);
-		List<BankDTO> bankDtoList = result.stream().map(bank -> BankMapper.toDto(bank)).toList();
-		return bankDtoList;
-	}
-
-	@Transactional(readOnly = true)
-	public List<BankDTO> getAllBanks() {
-		List<Bank> result = bankRepository.findAll();
-		List<BankDTO> bankDtoList = result.stream().map(bank -> BankMapper.toDto(bank)).toList();
-		return bankDtoList;
+	public List<BankDTO> getBanks(Integer code, String name) {
+		validateParameters(code, name);
+		List<Bank> bankList;
+		if(code != 0) {
+			bankList = getBankByCode(code);
+		}
+		else if(!name.isBlank()) {
+			bankList = bankRepository.findByName(name);
+		}
+		else {
+			bankList = bankRepository.findAll();
+		}
+		return bankList.stream().map(bank -> BankMapper.toDto(bank)).toList();
 	}
 
 	@Transactional
@@ -66,8 +63,20 @@ public class BankService {
 			bank = bankRepository.save(bank);
 			return BankMapper.toDto(bank);
 		}
-		catch(EntityNotFoundException e) {
+		catch (EntityNotFoundException e) {
 			throw new ResourceNotFoundException(BANK_NOT_FOUND);
 		}
+	}
+
+	private void validateParameters(Integer code, String name) {
+		if(code != 0 && !name.isBlank()) {
+			throw new IllegalParameterException(MULTIPLE_PARAMS);
+		}
+	}
+
+	private List<Bank> getBankByCode(Integer code){
+		Optional<Bank> result = bankRepository.findByCode(code);
+		Bank bank = result.orElseThrow(() -> new ResourceNotFoundException(BANK_NOT_FOUND));
+		return List.of(bank);
 	}
 }
