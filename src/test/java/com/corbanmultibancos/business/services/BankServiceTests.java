@@ -17,19 +17,20 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.corbanmultibancos.business.dto.BankDTO;
 import com.corbanmultibancos.business.entities.Bank;
 import com.corbanmultibancos.business.repositories.BankRepository;
+import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(SpringExtension.class)
 public class BankServiceTests {
-	
+
 	@InjectMocks
 	private BankService bankService;
-	
+
 	@Mock
 	private BankRepository bankRepository;
-	
+
 	private Long existingId;
 	private Long nonExistingId;
 	private Integer existingCode;
@@ -60,61 +61,68 @@ public class BankServiceTests {
 		Mockito.when(bankRepository.getReferenceById(existingId)).thenReturn(bankEntity);
 		Mockito.when(bankRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 	}
-	
+
 	@Test
 	public void getBankByIdShouldReturnBankDTOWhenExistingId() {
 		BankDTO bankDto = bankService.getBankById(existingId);
 		Assertions.assertEquals(existingId, bankDto.getId());
 	}
-	
+
 	@Test
 	public void getBankByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBankById(nonExistingId));
 	}
-	
+
 	@Test
-	public void getBankByCodeShouldReturnBankDTOWhenExistingCode() {
-		BankDTO bankDto = bankService.getBankByCode(existingCode);
-		Assertions.assertEquals(existingCode, bankDto.getCode());
+	public void getBanksShouldReturnListOfSingleBankDTOWhenExistingCode() {
+		List<BankDTO> bankDtoList = bankService.getBanks(existingCode, "");
+		Assertions.assertEquals(1, bankDtoList.size());
 	}
-	
+
 	@Test
-	public void getBankByCodeShouldThrowResourceNotFoundExceptionWhenNonExistingCode() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBankByCode(nonExistingCode));
+	public void getBanksShouldThrowResourceNotFoundExceptionWhenNonExistingCode() {
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBanks(nonExistingCode, ""));
 	}
-	
+
 	@Test
-	public void getBankByNameShouldReturnBankDTOListWhenPartialName() {
-		List<BankDTO> bankDtoList = bankService.getBankByName(partialName);
+	public void getBanksShouldReturnBankDTOListWhenPartialName() {
+		List<BankDTO> bankDtoList = bankService.getBanks(0, partialName);
 		Assertions.assertFalse(bankDtoList.isEmpty());
 	}
-	
+
 	@Test
-	public void getBankByNameShouldReturnBankDTOListWhenNonExistingName() {
-		List<BankDTO> bankDtoList = bankService.getBankByName(nonExistingName);
+	public void getBanksShouldReturnEmptyListWhenNonExistingName() {
+		List<BankDTO> bankDtoList = bankService.getBanks(0, nonExistingName);
 		Assertions.assertTrue(bankDtoList.isEmpty());
 	}
-	
+
 	@Test
-	public void getAllBanksShouldReturnBankDTOList() {
-		List<BankDTO> bankDtoList = bankService.getAllBanks();
+	public void getBanksShouldReturnBankDTOListWhenNoParameter() {
+		List<BankDTO> bankDtoList = bankService.getBanks(0, "");
 		Assertions.assertFalse(bankDtoList.isEmpty());
 	}
-	
+
+	@Test
+	public void getBanksShouldThrowIllegalParameterExceptionWhenBothParameters() {
+		Assertions.assertThrows(IllegalParameterException.class, () -> bankService.getBanks(existingCode, partialName));
+
+	}
+
 	@Test
 	public void createBankShouldReturnBankDTO() {
 		BankDTO bankDto = bankService.createBank(new BankDTO());
 		Assertions.assertNotNull(bankDto.getId());
 	}
-	
+
 	@Test
 	public void updateBankShouldReturnBankDTOWhenExistingId() {
 		BankDTO bankDto = bankService.updateBank(existingId, new BankDTO());
 		Assertions.assertEquals(existingId, bankDto.getId());
 	}
-	
+
 	@Test
 	public void updateBankShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.updateBank(nonExistingId, new BankDTO()));
+		Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> bankService.updateBank(nonExistingId, new BankDTO()));
 	}
 }

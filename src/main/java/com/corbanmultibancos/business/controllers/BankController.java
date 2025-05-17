@@ -32,7 +32,7 @@ public class BankController {
 	}
 
 	@GetMapping
-	public ResponseEntity<List<BankDTO>> getBanks(@RequestParam(defaultValue = "") Integer code,
+	public ResponseEntity<List<BankDTO>> getBanks(@RequestParam(defaultValue = "0") Integer code,
 												@RequestParam(defaultValue = "") String name) {
 		List<BankDTO> bankDtoList = bankService.getBanks(code, name);
 		return ResponseEntity.ok(bankDtoList);
