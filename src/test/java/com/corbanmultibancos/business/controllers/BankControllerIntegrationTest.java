@@ -34,15 +34,17 @@ public class BankControllerIntegrationTest {
 	private Long nonExistingId;
 	private Integer existingCode;
 	private Integer nonExistingCode;
+	private Integer otherExistingCode;
 	private String partialName;
 	private BankDTO bankDto;
-	
+
 	@BeforeEach
 	void setUp() {
 		existingId = 1L;
 		nonExistingId = 100L;
 		existingCode = 623;
 		nonExistingCode = 999;
+		otherExistingCode = 336;
 		partialName = "pa";
 		bankDto = new BankDTO(null, 1000, "Banco de teste");
 	}
@@ -122,6 +124,42 @@ public class BankControllerIntegrationTest {
 	}
 	
 	@Test
+	public void createBankShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
+		bankDto.setName("");
+		String bankJson = objectMapper.writeValueAsString(bankDto);
+		mockMvc.perform(post("/banks")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(bankJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+	
+	@Test
+	public void createBankShouldReturnUnprocessableEntityWhenCodeIsNull() throws Exception {
+		bankDto.setCode(null);
+		String bankJson = objectMapper.writeValueAsString(bankDto);
+		mockMvc.perform(post("/banks")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(bankJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+	
+	@Test
+	public void createBankShouldReturnUnprocessableEntityWhenUniqueCodeViolation() throws Exception {
+		bankDto.setCode(existingCode);
+		String bankJson = objectMapper.writeValueAsString(bankDto);
+		mockMvc.perform(post("/banks")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(bankJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+	
+	@Test
 	public void updateBankShouldReturnBankDTOWhenExistingId() throws Exception {
 		String bankJson = objectMapper.writeValueAsString(bankDto);
 		mockMvc.perform(put("/banks/{id}", existingId)
@@ -144,5 +182,41 @@ public class BankControllerIntegrationTest {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
+	}
+	
+	@Test
+	public void updateBankShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
+		bankDto.setName("");
+		String bankJson = objectMapper.writeValueAsString(bankDto);
+		mockMvc.perform(put("/banks/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(bankJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+	
+	@Test
+	public void updateBankShouldReturnUnprocessableEntityWhenCodeIsNull() throws Exception {
+		bankDto.setCode(null);
+		String bankJson = objectMapper.writeValueAsString(bankDto);
+		mockMvc.perform(put("/banks/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(bankJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+	
+	@Test
+	public void updateBankShouldReturnUnprocessableEntityWhenUniqueCodeViolation() throws Exception {
+		bankDto.setCode(otherExistingCode);
+		String bankJson = objectMapper.writeValueAsString(bankDto);
+		mockMvc.perform(put("/banks/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(bankJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
 	}
 }

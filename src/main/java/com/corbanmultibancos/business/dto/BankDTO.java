@@ -1,9 +1,19 @@
 package com.corbanmultibancos.business.dto;
 
+import com.corbanmultibancos.business.validations.BankDTOValid;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+@BankDTOValid
 public class BankDTO {
 
 	private Long id;
+	
+	@NotNull(message = "Obrigatório informar o código do banco")
 	private Integer code;
+	
+	@NotBlank(message = "Obrigatório informar nome do banco")
 	private String name;
 
 	public BankDTO() {

@@ -18,6 +18,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.corbanmultibancos.business.dto.BankDTO;
 import com.corbanmultibancos.business.services.BankService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/banks")
 public class BankController {
@@ -39,14 +41,14 @@ public class BankController {
 	}
 
 	@PostMapping
-	public ResponseEntity<BankDTO> createBank(@RequestBody BankDTO bankDto) {
+	public ResponseEntity<BankDTO> createBank(@Valid @RequestBody BankDTO bankDto) {
 		bankDto = bankService.createBank(bankDto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").build(bankDto.getId());
 		return ResponseEntity.created(uri).body(bankDto);
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<BankDTO> updateBank(@PathVariable Long id, @RequestBody BankDTO bankDto) {
+	public ResponseEntity<BankDTO> updateBank(@PathVariable Long id, @Valid @RequestBody BankDTO bankDto) {
 		bankDto = bankService.updateBank(id, bankDto);
 		return ResponseEntity.ok(bankDto);
 	}
