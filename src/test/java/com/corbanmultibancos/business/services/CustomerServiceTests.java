@@ -62,8 +62,9 @@ public class CustomerServiceTests {
 		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(customerRepository.findByCpf(existingCpf)).thenReturn(Optional.of(customerEntity));
 		Mockito.when(customerRepository.findByCpf(nonExistingCpf)).thenReturn(Optional.empty());
-		Mockito.when(customerRepository.findByNameContainingIgnoreCase(partialName, any(Pageable.class))).thenReturn(customerPage);
-		Mockito.when(customerRepository.findByPhoneContaining(partialPhone, any(Pageable.class))).thenReturn(customerPage);
+		Mockito.when(customerRepository.findByNameContainingIgnoreCase(partialName, pageable)).thenReturn(customerPage);
+		Mockito.when(customerRepository.findByPhoneContaining(partialPhone, pageable)).thenReturn(customerPage);
+		Mockito.when(customerRepository.findAll(pageable)).thenReturn(customerPage);
 		Mockito.when(customerRepository.getReferenceById(existingId)).thenReturn(customerEntity);
 		Mockito.when(customerRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Mockito.when(customerRepository.save(any())).thenReturn(customerEntity);
@@ -136,14 +137,12 @@ public class CustomerServiceTests {
 
 	@Test
 	public void createCustomerShouldReturnCustomerDTO() {
-		customerEntity.setId(null);
 		CustomerDTO customerDto = customerService.createCustomer(CustomerMapper.toDto(customerEntity));
 		Assertions.assertNotNull(customerDto.getId());
 	}
 
 	@Test
 	public void updateCustomerShouldReturnCustomerDTOWhenExistingId() {
-		customerEntity.setId(null);
 		CustomerDTO customerDto = customerService.updateCustomer(existingId, CustomerMapper.toDto(customerEntity));
 		Assertions.assertEquals(existingId, customerDto.getId());
 	}
