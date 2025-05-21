@@ -89,7 +89,7 @@ public class CustomerService {
 		}
 	}
 
-	public Page<Customer> getCustomerByCpf(String cpf) {
+	private Page<Customer> getCustomerByCpf(String cpf) {
 		Optional<Customer> result = customerRepository.findByCpf(cpf);
 		if(result.isPresent()) {
 			Customer customer = result.get();

@@ -2,14 +2,28 @@ package com.corbanmultibancos.business.dto;
 
 import java.time.LocalDate;
 
+import com.corbanmultibancos.business.validations.CustomerDTOValid;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+@CustomerDTOValid
 public class CustomerDTO {
 
 	private Long id;
+
+	@NotBlank(message = "Obrigatório informar o CPF do cliente")
 	private String cpf;
+
+	@NotBlank(message = "Obrigatório informar o nome do cliente")
 	private String name;
+
+	@NotBlank(message = "Obrigatório informar o telefone do cliente")
 	private String phone;
+
+	@NotNull(message = "Obrigatório informar a data de nascimento do cliente")
 	private LocalDate birthDate;
-	
+
 	public CustomerDTO() {
 	}
 

@@ -148,12 +148,12 @@ public class CustomerControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk())
+			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.cpf").value(customerDto.getCpf()))
 			.andExpect(jsonPath("$.name").value(customerDto.getName()))
 			.andExpect(jsonPath("$.phone").value(customerDto.getPhone()))
-			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate()));
+			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate().toString()));
 	}
 
 	@Test
@@ -223,7 +223,7 @@ public class CustomerControllerIntegrationTests {
 			.andExpect(jsonPath("$.cpf").value(customerDto.getCpf()))
 			.andExpect(jsonPath("$.name").value(customerDto.getName()))
 			.andExpect(jsonPath("$.phone").value(customerDto.getPhone()))
-			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate()));
+			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate().toString()));
 	}
 
 	@Test
