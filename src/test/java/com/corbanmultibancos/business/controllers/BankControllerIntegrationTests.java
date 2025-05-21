@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class BankControllerIntegrationTest {
+public class BankControllerIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -51,7 +51,8 @@ public class BankControllerIntegrationTest {
 	
 	@Test
 	public void getBankByIdShouldReturnBankDTOWhenExistingId() throws Exception {
-		mockMvc.perform(get("/banks/{id}", existingId).accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(get("/banks/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
@@ -61,14 +62,15 @@ public class BankControllerIntegrationTest {
 	
 	@Test
 	public void getBankByIdShouldReturnNotFoundWhenNonExistingId() throws Exception {
-		mockMvc.perform(get("/banks/{id}", nonExistingId).accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(get("/banks/{id}", nonExistingId)
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 	
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenExistingCode() throws Exception {
-		mockMvc.perform(get("/banks?code={code}&name={name}", existingCode, "")
+		mockMvc.perform(get("/banks?code={code}", existingCode)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -77,7 +79,7 @@ public class BankControllerIntegrationTest {
 	
 	@Test
 	public void getBanksShouldReturnNotFoundWhenNonExistingCode() throws Exception {
-		mockMvc.perform(get("/banks?code={code}&name={name}", nonExistingCode, "")
+		mockMvc.perform(get("/banks?code={code}", nonExistingCode)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
@@ -85,7 +87,7 @@ public class BankControllerIntegrationTest {
 	
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenPartialName() throws Exception {
-		mockMvc.perform(get("/banks?code={code}&name={name}", 0, partialName)
+		mockMvc.perform(get("/banks?name={name}", partialName)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -94,7 +96,7 @@ public class BankControllerIntegrationTest {
 	
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenNoParameter() throws Exception {
-		mockMvc.perform(get("/banks?code={code}&name={name}", 0, "")
+		mockMvc.perform(get("/banks")
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -110,7 +112,7 @@ public class BankControllerIntegrationTest {
 	}
 	
 	@Test
-	public void createBankShouldReturnBankDTO() throws Exception {
+	public void createBankShouldReturnBankDTOWhenValidData() throws Exception {
 		String bankJson = objectMapper.writeValueAsString(bankDto);
 		mockMvc.perform(post("/banks")
 				.accept(MediaType.APPLICATION_JSON)
@@ -160,7 +162,7 @@ public class BankControllerIntegrationTest {
 	}
 	
 	@Test
-	public void updateBankShouldReturnBankDTOWhenExistingId() throws Exception {
+	public void updateBankShouldReturnBankDTOWhenExistingIdAndValidData() throws Exception {
 		String bankJson = objectMapper.writeValueAsString(bankDto);
 		mockMvc.perform(put("/banks/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
