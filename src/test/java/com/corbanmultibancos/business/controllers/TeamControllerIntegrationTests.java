@@ -123,7 +123,7 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
-	public void deleteTeamShouldDoNothingWhenEmptyTeam() throws Exception {
+	public void deleteTeamShouldReturnNoContentWhenEmptyTeam() throws Exception {
 		mockMvc.perform(delete("/teams/{id}", emptyTeamId))
 			.andExpect(status().isNoContent());
 	}

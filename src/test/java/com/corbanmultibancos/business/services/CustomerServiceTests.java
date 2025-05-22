@@ -1,6 +1,8 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -85,30 +87,50 @@ public class CustomerServiceTests {
 	public void getCustomersShouldReturnPageOfSingleCustomerDTOWhenExistingCpf() {
 		Page<CustomerDTO> page = customerService.getCustomers(existingCpf, "", "", pageable);
 		Assertions.assertEquals(1, page.getSize());
+		Mockito.verify(customerRepository, times(1)).findByCpf(existingCpf);
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
+		Mockito.verify(customerRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getCustomersShouldReturnEmptyPageWhenNonExistingCpf() {
 		Page<CustomerDTO> page = customerService.getCustomers(nonExistingCpf, "", "", pageable);
 		Assertions.assertTrue(page.isEmpty());
+		Mockito.verify(customerRepository, times(1)).findByCpf(nonExistingCpf);
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
+		Mockito.verify(customerRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenPartialName() {
 		Page<CustomerDTO> page = customerService.getCustomers("", partialName, "", pageable);
 		Assertions.assertFalse(page.isEmpty());
+		Mockito.verify(customerRepository, never()).findByCpf(existingCpf);
+		Mockito.verify(customerRepository, times(1)).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
+		Mockito.verify(customerRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenPartialPhone() {
 		Page<CustomerDTO> page = customerService.getCustomers("", "", partialPhone, pageable);
 		Assertions.assertFalse(page.isEmpty());
+		Mockito.verify(customerRepository, never()).findByCpf(existingCpf);
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(customerRepository, times(1)).findByPhoneContaining(partialPhone, pageable);
+		Mockito.verify(customerRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenNoParameter() {
 		Page<CustomerDTO> page = customerService.getCustomers("", "", "", pageable);
 		Assertions.assertFalse(page.isEmpty());
+		Mockito.verify(customerRepository, never()).findByCpf(existingCpf);
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
+		Mockito.verify(customerRepository, times(1)).findAll(pageable);
 	}
 
 	@Test

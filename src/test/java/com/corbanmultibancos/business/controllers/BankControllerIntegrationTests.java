@@ -3,7 +3,6 @@ package com.corbanmultibancos.business.controllers;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,7 +52,6 @@ public class BankControllerIntegrationTests {
 	public void getBankByIdShouldReturnBankDTOWhenExistingId() throws Exception {
 		mockMvc.perform(get("/banks/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.code").exists())
@@ -64,7 +62,6 @@ public class BankControllerIntegrationTests {
 	public void getBankByIdShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(get("/banks/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 	
@@ -72,7 +69,6 @@ public class BankControllerIntegrationTests {
 	public void getBanksShouldReturnBankDTOListWhenExistingCode() throws Exception {
 		mockMvc.perform(get("/banks?code={code}", existingCode)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isNotEmpty());
 	}
@@ -81,7 +77,6 @@ public class BankControllerIntegrationTests {
 	public void getBanksShouldReturnNotFoundWhenNonExistingCode() throws Exception {
 		mockMvc.perform(get("/banks?code={code}", nonExistingCode)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 	
@@ -89,7 +84,6 @@ public class BankControllerIntegrationTests {
 	public void getBanksShouldReturnBankDTOListWhenPartialName() throws Exception {
 		mockMvc.perform(get("/banks?name={name}", partialName)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isNotEmpty());
 	}
@@ -98,7 +92,6 @@ public class BankControllerIntegrationTests {
 	public void getBanksShouldReturnBankDTOListWhenNoParameter() throws Exception {
 		mockMvc.perform(get("/banks")
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isNotEmpty());
 	}
@@ -107,7 +100,6 @@ public class BankControllerIntegrationTests {
 	public void getBanksShouldReturnBadRequestWhenBothParameters() throws Exception {
 		mockMvc.perform(get("/banks?code={code}&name={name}", existingCode, partialName)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest());
 	}
 	
@@ -118,7 +110,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.code").value(bankDto.getCode()))
@@ -133,7 +124,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 	
@@ -145,7 +135,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 	
@@ -157,7 +146,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 	
@@ -168,7 +156,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.code").value(bankDto.getCode()))
@@ -182,7 +169,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 	
@@ -194,7 +180,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 	
@@ -206,7 +191,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 	
@@ -218,7 +202,6 @@ public class BankControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(bankJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 }

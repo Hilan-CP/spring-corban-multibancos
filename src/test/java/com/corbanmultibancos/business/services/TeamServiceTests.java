@@ -86,18 +86,24 @@ public class TeamServiceTests {
 	public void getTeamsShouldReturnTeamListWhenPartialName() {
 		List<TeamDTO> teamDtoList = teamService.getTeams(partialName);
 		Assertions.assertFalse(teamDtoList.isEmpty());
+		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(partialName);
+		Mockito.verify(teamRepository, never()).findAll();
 	}
 
 	@Test
 	public void getTeamsShouldReturnEmptyListWhenNonExistingName() {
 		List<TeamDTO> teamDtoList = teamService.getTeams(nonExistingName);
 		Assertions.assertTrue(teamDtoList.isEmpty());
+		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(nonExistingName);
+		Mockito.verify(teamRepository, never()).findAll();
 	}
 
 	@Test
 	public void getTeamsShouldReturnTeamListWhenNoParameter() {
 		List<TeamDTO> teamDtoList = teamService.getTeams("");
 		Assertions.assertFalse(teamDtoList.isEmpty());
+		Mockito.verify(teamRepository, never()).findByNameContainingIgnoreCase(partialName);
+		Mockito.verify(teamRepository, times(1)).findAll();
 	}
 
 	@Test
