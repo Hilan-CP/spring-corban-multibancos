@@ -12,7 +12,7 @@ public class TeamMapper {
 	public static TeamDTO toDto(Team entity) {
 		TeamDTO dto = new TeamDTO();
 		dto.setId(entity.getId());
-		dto.setName(dto.getName());
+		dto.setName(entity.getName());
 		return dto;
 	}
 }

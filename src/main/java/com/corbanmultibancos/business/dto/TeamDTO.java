@@ -1,8 +1,12 @@
 package com.corbanmultibancos.business.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class TeamDTO {
 
 	private Long id;
+	
+	@NotBlank(message = "Obrigatório informar nome do time")
 	private String name;
 	
 	public TeamDTO() {
