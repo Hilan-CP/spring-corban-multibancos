@@ -42,6 +42,7 @@ public class TeamServiceTests {
 	private Long nonExistingId;
 	private Long dependentId;
 	private String partialName;
+	private String nonExistingName;
 	private Team teamEntity;
 	private List<Team> teamList;
 
@@ -51,11 +52,13 @@ public class TeamServiceTests {
 		nonExistingId = 100L;
 		dependentId = 2L;
 		partialName = "nior";
-		teamEntity = new Team(null, "Junior");
+		nonExistingName = "equipe inexistente";
+		teamEntity = new Team(1L, "Junior");
 		teamList = List.of(teamEntity);
 		Mockito.when(teamRepository.findById(existingId)).thenReturn(Optional.of(teamEntity));
 		Mockito.when(teamRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(teamRepository.findByNameContainingIgnoreCase(partialName)).thenReturn(teamList);
+		Mockito.when(teamRepository.findByNameContainingIgnoreCase(nonExistingName)).thenReturn(List.of());
 		Mockito.when(teamRepository.findAll()).thenReturn(teamList);
 		Mockito.when(teamRepository.getReferenceById(existingId)).thenReturn(teamEntity);
 		Mockito.when(teamRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
@@ -83,6 +86,12 @@ public class TeamServiceTests {
 	public void getTeamsShouldReturnTeamListWhenPartialName() {
 		List<TeamDTO> teamDtoList = teamService.getTeams(partialName);
 		Assertions.assertFalse(teamDtoList.isEmpty());
+	}
+
+	@Test
+	public void getTeamsShouldReturnEmptyListWhenNonExistingName() {
+		List<TeamDTO> teamDtoList = teamService.getTeams(nonExistingName);
+		Assertions.assertTrue(teamDtoList.isEmpty());
 	}
 
 	@Test
