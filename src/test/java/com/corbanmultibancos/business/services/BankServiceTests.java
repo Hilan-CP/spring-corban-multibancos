@@ -1,6 +1,8 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import java.util.List;
 import java.util.Optional;
@@ -77,29 +79,45 @@ public class BankServiceTests {
 	public void getBanksShouldReturnListOfSingleBankDTOWhenExistingCode() {
 		List<BankDTO> bankDtoList = bankService.getBanks(existingCode, "");
 		Assertions.assertEquals(1, bankDtoList.size());
+		Mockito.verify(bankRepository, times(1)).findByCode(any());
+		Mockito.verify(bankRepository, never()).findByName(any());
+		Mockito.verify(bankRepository, never()).findAll();
 	}
 
 	@Test
-	public void getBanksShouldThrowResourceNotFoundExceptionWhenNonExistingCode() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBanks(nonExistingCode, ""));
+	public void getBanksShouldReturnEmptyListWhenNonExistingCode() {
+		List<BankDTO> bankDtoList = bankService.getBanks(nonExistingCode, "");
+		Assertions.assertTrue(bankDtoList.isEmpty());
+		Mockito.verify(bankRepository, times(1)).findByCode(any());
+		Mockito.verify(bankRepository, never()).findByName(any());
+		Mockito.verify(bankRepository, never()).findAll();
 	}
 
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenPartialName() {
 		List<BankDTO> bankDtoList = bankService.getBanks(0, partialName);
 		Assertions.assertFalse(bankDtoList.isEmpty());
+		Mockito.verify(bankRepository, never()).findByCode(any());
+		Mockito.verify(bankRepository, times(1)).findByName(any());
+		Mockito.verify(bankRepository, never()).findAll();
 	}
 
 	@Test
 	public void getBanksShouldReturnEmptyListWhenNonExistingName() {
 		List<BankDTO> bankDtoList = bankService.getBanks(0, nonExistingName);
 		Assertions.assertTrue(bankDtoList.isEmpty());
+		Mockito.verify(bankRepository, never()).findByCode(any());
+		Mockito.verify(bankRepository, times(1)).findByName(any());
+		Mockito.verify(bankRepository, never()).findAll();
 	}
 
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenNoParameter() {
 		List<BankDTO> bankDtoList = bankService.getBanks(0, "");
 		Assertions.assertFalse(bankDtoList.isEmpty());
+		Mockito.verify(bankRepository, never()).findByCode(any());
+		Mockito.verify(bankRepository, never()).findByName(any());
+		Mockito.verify(bankRepository, times(1)).findAll();
 	}
 
 	@Test

@@ -76,7 +76,9 @@ public class BankService {
 
 	private List<Bank> getBankByCode(Integer code){
 		Optional<Bank> result = bankRepository.findByCode(code);
-		Bank bank = result.orElseThrow(() -> new ResourceNotFoundException(BANK_NOT_FOUND));
-		return List.of(bank);
+		if(result.isPresent()) {
+			return List.of(result.get());
+		}
+		return List.of();
 	}
 }
