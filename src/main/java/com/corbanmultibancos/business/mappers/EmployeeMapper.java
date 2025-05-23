@@ -10,7 +10,9 @@ public class EmployeeMapper {
 	public static void copyEmployeeCreationDtoToEntity(EmployeeCreationDTO dto, Employee entity) {
 		entity.setCpf(dto.getCpf());
 		entity.setName(dto.getName());
-		entity.setTeam(new Team(dto.getTeamId(), null));
+		if(dto.getTeamId() != null) {
+			entity.setTeam(new Team(dto.getTeamId(), null));
+		}
 	}
 
 	public static EmployeeCreationDTO toEmployeeCreationDto(Employee entity) {
@@ -18,7 +20,9 @@ public class EmployeeMapper {
 		dto.setId(entity.getId());
 		dto.setCpf(entity.getCpf());
 		dto.setName(entity.getName());
-		dto.setTeamId(entity.getTeam().getId());
+		if(entity.getTeam() != null) {
+			dto.setTeamId(entity.getTeam().getId());
+		}
 		return dto;
 	}
 
@@ -27,9 +31,13 @@ public class EmployeeMapper {
 		dto.setId(entity.getId());
 		dto.setCpf(entity.getCpf());
 		dto.setName(entity.getName());
-		dto.setUsername(entity.getUser().getUsername());
-		dto.setRoleName(entity.getUser().getRole().getAuthority());
-		dto.setTeamDto(TeamMapper.toDto(entity.getTeam()));
+		if(entity.getUser() != null) {
+			dto.setUsername(entity.getUser().getUsername());
+			dto.setRoleName(entity.getUser().getRole().getAuthority());
+		}
+		if(entity.getTeam() != null) {
+			dto.setTeamDto(TeamMapper.toDto(entity.getTeam()));
+		}
 		return dto;
 	}
 }

@@ -1,6 +1,8 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +23,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
 import com.corbanmultibancos.business.dto.EmployeeUserDTO;
 import com.corbanmultibancos.business.entities.Employee;
-import com.corbanmultibancos.business.entities.Team;
 import com.corbanmultibancos.business.mappers.EmployeeMapper;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
@@ -85,24 +86,36 @@ public class EmployeeServiceTests {
 	public void getEmployeesShouldReturnPageOfSingleEmployeeUserDTOWhenExistingCpf() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees(existingCpf, "", pageable);
 		Assertions.assertEquals(1, employeeDtoPage.getSize());
+		Mockito.verify(employeeRepository, times(1)).findByCpf(existingCpf);
+		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(employeeRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getEmployeesShouldReturnEmptyPageWhenNonExistingCpf() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees(nonExistingCpf, "", pageable);
 		Assertions.assertTrue(employeeDtoPage.isEmpty());
+		Mockito.verify(employeeRepository, times(1)).findByCpf(nonExistingCpf);
+		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(employeeRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getEmployeesShouldReturnPageOfEmployeeUserDTOWhenPartialName() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees("", partialName, pageable);
 		Assertions.assertFalse(employeeDtoPage.isEmpty());
+		Mockito.verify(employeeRepository, never()).findByCpf(existingCpf);
+		Mockito.verify(employeeRepository, times(1)).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(employeeRepository, never()).findAll(pageable);
 	}
 
 	@Test
 	public void getEmployeesShouldReturnPageOfEmployeeUserDTOWhenNoParameter() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees("", "", pageable);
 		Assertions.assertFalse(employeeDtoPage.isEmpty());
+		Mockito.verify(employeeRepository, never()).findByCpf(existingCpf);
+		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
+		Mockito.verify(employeeRepository, times(1)).findAll(pageable);
 	}
 
 	@Test
