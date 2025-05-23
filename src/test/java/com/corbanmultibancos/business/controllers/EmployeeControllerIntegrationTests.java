@@ -43,7 +43,7 @@ public class EmployeeControllerIntegrationTests {
 		nonExistingId = 100L;
 		existingCpf = "10975759000";
 		nonExistingCpf = "00011122233";
-		otherCpf = "22706329076";
+		otherCpf = "33701848009";
 		partialName = "jo";
 		employeeCreationDto = new EmployeeCreationDTO(null, "01234567890", "Novo Funcionário", 1L);
 	}
@@ -115,7 +115,7 @@ public class EmployeeControllerIntegrationTests {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(employeeJson)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk())
+			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.cpf").value(employeeCreationDto.getCpf()))
 			.andExpect(jsonPath("$.name").value(employeeCreationDto.getName()))
@@ -158,7 +158,7 @@ public class EmployeeControllerIntegrationTests {
 	@Test
 	public void updateEmployeeShouldReturnEmployeeCreationDTOWhenExistingId() throws Exception {
 		String employeeJson = objectMapper.writeValueAsString(employeeCreationDto);
-		mockMvc.perform(put("/employees", existingId)
+		mockMvc.perform(put("/employees/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(employeeJson)
 				.contentType(MediaType.APPLICATION_JSON))
@@ -172,7 +172,7 @@ public class EmployeeControllerIntegrationTests {
 	@Test
 	public void updateEmployeeShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		String employeeJson = objectMapper.writeValueAsString(employeeCreationDto);
-		mockMvc.perform(put("/employees", nonExistingCpf)
+		mockMvc.perform(put("/employees/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(employeeJson)
 				.contentType(MediaType.APPLICATION_JSON))
@@ -183,7 +183,7 @@ public class EmployeeControllerIntegrationTests {
 	public void updateEmployeeShouldReturnUnprocessableEntityWhenUniqueCpfViolation() throws Exception {
 		employeeCreationDto.setCpf(otherCpf);
 		String employeeJson = objectMapper.writeValueAsString(employeeCreationDto);
-		mockMvc.perform(put("/employees", existingId)
+		mockMvc.perform(put("/employees/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(employeeJson)
 				.contentType(MediaType.APPLICATION_JSON))

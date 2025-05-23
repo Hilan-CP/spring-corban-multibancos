@@ -7,18 +7,18 @@ public class EmployeeUserDTO {
 	private String name;
 	private String username;
 	private String roleName;
-	private TeamDTO teamDto;
+	private TeamDTO team;
 
 	public EmployeeUserDTO() {
 	}
 
-	public EmployeeUserDTO(Long id, String cpf, String name, String username, String roleName, TeamDTO teamDto) {
+	public EmployeeUserDTO(Long id, String cpf, String name, String username, String roleName, TeamDTO team) {
 		this.id = id;
 		this.cpf = cpf;
 		this.name = name;
 		this.username = username;
 		this.roleName = roleName;
-		this.teamDto = teamDto;
+		this.team = team;
 	}
 
 	public Long getId() {
@@ -61,11 +61,11 @@ public class EmployeeUserDTO {
 		this.roleName = roleName;
 	}
 
-	public TeamDTO getTeamDto() {
-		return teamDto;
+	public TeamDTO getTeam() {
+		return team;
 	}
 
-	public void setTeamDto(TeamDTO teamDto) {
-		this.teamDto = teamDto;
+	public void setTeam(TeamDTO teamDto) {
+		this.team = teamDto;
 	}
 }

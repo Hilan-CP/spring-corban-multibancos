@@ -68,7 +68,7 @@ public class EmployeeService {
 			return EmployeeMapper.toEmployeeCreationDto(employee);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(MULTIPLE_PARAMS);
+			throw new ResourceNotFoundException(EMPLOYEE_NOT_FOUND);
 		}
 	}
 

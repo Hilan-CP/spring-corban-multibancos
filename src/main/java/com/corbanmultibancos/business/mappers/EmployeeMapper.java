@@ -36,7 +36,7 @@ public class EmployeeMapper {
 			dto.setRoleName(entity.getUser().getRole().getAuthority());
 		}
 		if(entity.getTeam() != null) {
-			dto.setTeamDto(TeamMapper.toDto(entity.getTeam()));
+			dto.setTeam(TeamMapper.toDto(entity.getTeam()));
 		}
 		return dto;
 	}
