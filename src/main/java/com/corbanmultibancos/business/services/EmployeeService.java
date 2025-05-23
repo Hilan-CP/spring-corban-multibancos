@@ -27,12 +27,12 @@ public class EmployeeService {
 	}
 
 	@Transactional
-	public EmployeeCreationDTO getEmployeeById(EmployeeCreationDTO employeeDto) {
+	public EmployeeCreationDTO createEmployee(EmployeeCreationDTO employeeDto) {
 		return null;
 	}
 
 	@Transactional
-	public EmployeeCreationDTO getEmployeeById(Long id, EmployeeCreationDTO employeeDto) {
+	public EmployeeCreationDTO updateEmployee(Long id, EmployeeCreationDTO employeeDto) {
 		return null;
 	}
 }
