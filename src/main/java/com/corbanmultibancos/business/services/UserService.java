@@ -18,7 +18,7 @@ public class UserService {
 		return null;
 	}
 
-	public Page<UserDTO> getUsers(Pageable pageable) {
+	public Page<UserDTO> getUsers(String username, Pageable pageable) {
 		return null;
 	}
 
