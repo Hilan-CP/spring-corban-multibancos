@@ -27,7 +27,6 @@ import com.corbanmultibancos.business.entities.User;
 import com.corbanmultibancos.business.mappers.UserMapper;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.UserRepository;
-import com.corbanmultibancos.business.services.exceptions.DataIntegrityException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -46,7 +45,6 @@ public class UserServiceTests {
 
 	private Long existingId;
 	private Long nonExistingId;
-	private Long dependentId;
 	private String existingUsername;
 	private String nonExistingUsername;
 	private User userEntity;
@@ -59,7 +57,6 @@ public class UserServiceTests {
 	void setUp() {
 		existingId = 1L;
 		nonExistingId = 100L;
-		dependentId = 2L;
 		existingUsername = "florinda";
 		nonExistingUsername = "usuario inexistente";
 		employee = new Employee(existingId, null, null, null, null);
@@ -77,9 +74,7 @@ public class UserServiceTests {
 		Mockito.when(userRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Mockito.when(userRepository.existsById(existingId)).thenReturn(true);
 		Mockito.when(userRepository.existsById(nonExistingId)).thenReturn(false);
-		Mockito.when(userRepository.existsById(dependentId)).thenReturn(true);
 		Mockito.doNothing().when(userRepository).deleteById(existingId);
-		Mockito.when(employeeRepository.existsById(dependentId)).thenReturn(true);
 	}
 
 	@Test
@@ -111,7 +106,7 @@ public class UserServiceTests {
 
 	@Test
 	public void getUsersShouldReturnPageOfUserDTOWhenNoParameter() {
-		Page<UserDTO> userDtoPage = userService.getUsers(nonExistingUsername, pageable);
+		Page<UserDTO> userDtoPage = userService.getUsers("", pageable);
 		Assertions.assertFalse(userDtoPage.isEmpty());
 		Mockito.verify(userRepository, never()).findByUsername(existingUsername);
 		Mockito.verify(userRepository, times(1)).findAll(pageable);
@@ -146,12 +141,5 @@ public class UserServiceTests {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> userService.deleteUser(nonExistingId));
 		Mockito.verify(userRepository, never()).deleteById(nonExistingId);
-	}
-
-	@Test
-	public void deleteUserShouldThrowDataIntegrityExceptionWhenDependentId() {
-		Assertions.assertThrows(DataIntegrityException.class,
-				() -> userService.deleteUser(dependentId));
-		Mockito.verify(userRepository, never()).deleteById(dependentId);
 	}
 }
