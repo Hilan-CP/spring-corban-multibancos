@@ -2,7 +2,7 @@ package com.corbanmultibancos.business.dto;
 
 public class UserDTO {
 
-	private Long id;
+	private Long employeeId;
 	private String username;
 	private String password;
 	private RoleDTO role;
@@ -10,19 +10,19 @@ public class UserDTO {
 	public UserDTO() {
 	}
 
-	public UserDTO(Long id, String username, String password, RoleDTO role) {
-		this.id = id;
+	public UserDTO(Long employeeId, String username, String password, RoleDTO role) {
+		this.employeeId = employeeId;
 		this.username = username;
 		this.password = password;
 		this.role = role;
 	}
 
-	public Long getId() {
-		return id;
+	public Long getEmployeeId() {
+		return employeeId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setEmployeeId(Long id) {
+		this.employeeId = id;
 	}
 
 	public String getUsername() {

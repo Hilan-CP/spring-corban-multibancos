@@ -16,7 +16,7 @@ public class UserMapper {
 	
 	public static UserDTO toDto(User entity) {
 		UserDTO dto = new UserDTO();
-		dto.setId(entity.getId());
+		dto.setEmployeeId(entity.getId());
 		dto.setUsername(entity.getUsername());
 		dto.setRole(RoleMapper.toDto(entity.getRole()));
 		return dto;

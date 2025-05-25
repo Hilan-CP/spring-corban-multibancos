@@ -80,7 +80,7 @@ public class UserServiceTests {
 	@Test
 	public void getUserByIdShouldReturnUserDTOWhenExistingId() {
 		UserDTO userDto = userService.getUserById(existingId);
-		Assertions.assertEquals(existingId, userDto.getId());
+		Assertions.assertEquals(existingId, userDto.getEmployeeId());
 	}
 
 	@Test
@@ -115,13 +115,13 @@ public class UserServiceTests {
 	@Test
 	public void createUserShouldReturnUserDTO() {
 		UserDTO userDto = userService.createUser(UserMapper.toDto(userEntity));
-		Assertions.assertNotNull(userDto.getId());
+		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
 
 	@Test
 	public void updateUserShouldReturnUserDTOWhenExistingId() {
 		UserDTO userDto = userService.updateUser(existingId, UserMapper.toDto(userEntity));
-		Assertions.assertNotNull(userDto.getId());
+		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
 
 	@Test

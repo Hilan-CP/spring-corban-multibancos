@@ -30,7 +30,6 @@ INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (5,'tereza'
 INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (6,'joao','joao123',2);
 INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (7,'jose','jose123',2);
 INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (8,'wagner','wagner123',2);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (9,'george','george123',2);
 
 INSERT INTO tb_customer(cpf, name, birth_date, phone) VALUES ('00066098645','SERGIO','1969-08-13','11930587328');
 INSERT INTO tb_customer(cpf, name, birth_date, phone) VALUES ('00384722288','FABIANA','1975-06-04','14937814172');
