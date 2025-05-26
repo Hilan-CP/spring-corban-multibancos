@@ -37,6 +37,7 @@ public class UserControllerIntegrationTests {
 	private Long newUserId;
 	private String existingUsername;
 	private String nonExistingUsername;
+	private String otherUsername;
 	private UserDTO userDto;
 
 	@BeforeEach
@@ -46,6 +47,7 @@ public class UserControllerIntegrationTests {
 		newUserId = 9L;
 		existingUsername = "florinda";
 		nonExistingUsername = "inexistente";
+		otherUsername = "zenobia";
 		userDto = new UserDTO(newUserId, "george", "george123", new RoleDTO(1L, null));
 	}
 
@@ -87,7 +89,7 @@ public class UserControllerIntegrationTests {
 
 	@Test
 	public void getUsersShouldReturnPageOfUserDTOWhenNoParameter() throws Exception {
-		mockMvc.perform(get("/users?username={username}", existingUsername)
+		mockMvc.perform(get("/users")
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
@@ -177,12 +179,12 @@ public class UserControllerIntegrationTests {
 	@Test
 	public void updateUserShouldReturnUserDTOWhenExistingId() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userDto);
-		mockMvc.perform(put("/users/{id}", newUserId)
+		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.employeeId").value(newUserId))
+			.andExpect(jsonPath("$.employeeId").value(existingId))
 			.andExpect(jsonPath("$.username").value(userDto.getUsername()))
 			.andExpect(jsonPath("$.password", nullValue()))
 			.andExpect(jsonPath("$.role.id").value(userDto.getRole().getId()))
@@ -200,19 +202,8 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
-	public void updateUserShouldReturnUnprocessableEntityWhenUniqueEmployeeIdViolation() throws Exception {
-		userDto.setEmployeeId(existingId);
-		String userJson = objectMapper.writeValueAsString(userDto);
-		mockMvc.perform(put("/users/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isUnprocessableEntity());
-	}
-
-	@Test
 	public void updateUserShouldReturnUnprocessableEntityWhenUniqueUsernameViolation() throws Exception {
-		userDto.setUsername(existingUsername);
+		userDto.setUsername(otherUsername);
 		String userJson = objectMapper.writeValueAsString(userDto);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)

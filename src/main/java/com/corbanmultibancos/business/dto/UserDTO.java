@@ -1,10 +1,22 @@
 package com.corbanmultibancos.business.dto;
 
+import com.corbanmultibancos.business.validations.UserDTOValid;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+@UserDTOValid
 public class UserDTO {
 
+	@NotNull(message = "Obrigatório informar o ID do funcionário")
 	private Long employeeId;
+	
+	@NotBlank(message = "Obrigatório informar o nome de usuário")
 	private String username;
+	
 	private String password;
+	
+	@NotNull(message = "Obrigatório informar o tipo de usuário")
 	private RoleDTO role;
 	
 	public UserDTO() {

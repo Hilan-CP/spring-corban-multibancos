@@ -1,8 +1,12 @@
 package com.corbanmultibancos.business.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public class RoleDTO {
 
+	@NotNull(message = "Obrigatório informar o ID do tipo de usuário")
 	private Long id;
+	
 	private String authority;
 	
 	public RoleDTO() {
