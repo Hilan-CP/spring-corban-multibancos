@@ -20,12 +20,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.corbanmultibancos.business.dto.UserDTO;
+import com.corbanmultibancos.business.dto.UserCreateDTO;
+import com.corbanmultibancos.business.dto.UserDataDTO;
+import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Role;
 import com.corbanmultibancos.business.entities.User;
-import com.corbanmultibancos.business.mappers.UserMapper;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
+import com.corbanmultibancos.business.repositories.RoleRepository;
 import com.corbanmultibancos.business.repositories.UserRepository;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
 
@@ -42,16 +44,23 @@ public class UserServiceTests {
 
 	@Mock
 	private EmployeeRepository employeeRepository;
+	
+	@Mock
+	private RoleRepository roleRepository;
 
 	private Long existingId;
 	private Long nonExistingId;
 	private String existingUsername;
 	private String nonExistingUsername;
+	private Long existingRoleId;
+	private Long nonExistingRoleId;
 	private User userEntity;
 	private Employee employee;
 	private Role role;
 	private Page<User> userPage;
 	private Pageable pageable;
+	private UserCreateDTO userCreateDto;
+	private UserUpdateDTO userUpdateDto;
 
 	@BeforeEach
 	void setUp() {
@@ -59,11 +68,15 @@ public class UserServiceTests {
 		nonExistingId = 100L;
 		existingUsername = "florinda";
 		nonExistingUsername = "usuario inexistente";
+		existingRoleId = 1L;
+		nonExistingRoleId = 100L;
 		employee = new Employee(existingId, null, null, null, null);
 		role = new Role(1L, "GESTOR");
 		userEntity = new User(existingId, existingUsername, "senha123", employee, role);
 		userPage = new PageImpl<>(List.of(userEntity));
 		pageable = PageRequest.of(0, 10);
+		userCreateDto = new UserCreateDTO(9L, "novo", "novo123", 1L);
+		userUpdateDto = new UserUpdateDTO("outro_usuario", "4321", 1L);
 		Mockito.when(userRepository.findById(existingId)).thenReturn(Optional.of(userEntity));
 		Mockito.when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(userRepository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
@@ -75,11 +88,18 @@ public class UserServiceTests {
 		Mockito.when(userRepository.existsById(existingId)).thenReturn(true);
 		Mockito.when(userRepository.existsById(nonExistingId)).thenReturn(false);
 		Mockito.doNothing().when(userRepository).deleteById(existingId);
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
+		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(employeeRepository.getReferenceById(existingId)).thenReturn(employee);
+		Mockito.when(employeeRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
+		Mockito.when(employeeRepository.save(any())).thenReturn(employee);
+		Mockito.when(roleRepository.getReferenceById(existingRoleId)).thenReturn(role);
+		Mockito.when(roleRepository.getReferenceById(nonExistingRoleId)).thenThrow(EntityNotFoundException.class);
 	}
 
 	@Test
 	public void getUserByIdShouldReturnUserDTOWhenExistingId() {
-		UserDTO userDto = userService.getUserById(existingId);
+		UserDataDTO userDto = userService.getUserById(existingId);
 		Assertions.assertEquals(existingId, userDto.getEmployeeId());
 	}
 
@@ -90,7 +110,7 @@ public class UserServiceTests {
 
 	@Test
 	public void getUsersShouldReturnPageOfSingleUserDTOWhenExistingUsername() {
-		Page<UserDTO> userDtoPage = userService.getUsers(existingUsername, pageable);
+		Page<UserDataDTO> userDtoPage = userService.getUsers(existingUsername, pageable);
 		Assertions.assertEquals(1, userDtoPage.getSize());
 		Mockito.verify(userRepository, times(1)).findByUsername(existingUsername);
 		Mockito.verify(userRepository, never()).findAll(pageable);
@@ -98,7 +118,7 @@ public class UserServiceTests {
 
 	@Test
 	public void getUsersShouldReturnEmptyPageWhenNonExistingUsername() {
-		Page<UserDTO> userDtoPage = userService.getUsers(nonExistingUsername, pageable);
+		Page<UserDataDTO> userDtoPage = userService.getUsers(nonExistingUsername, pageable);
 		Assertions.assertTrue(userDtoPage.isEmpty());
 		Mockito.verify(userRepository, times(1)).findByUsername(nonExistingUsername);
 		Mockito.verify(userRepository, never()).findAll(pageable);
@@ -106,7 +126,7 @@ public class UserServiceTests {
 
 	@Test
 	public void getUsersShouldReturnPageOfUserDTOWhenNoParameter() {
-		Page<UserDTO> userDtoPage = userService.getUsers("", pageable);
+		Page<UserDataDTO> userDtoPage = userService.getUsers("", pageable);
 		Assertions.assertFalse(userDtoPage.isEmpty());
 		Mockito.verify(userRepository, never()).findByUsername(existingUsername);
 		Mockito.verify(userRepository, times(1)).findAll(pageable);
@@ -114,20 +134,20 @@ public class UserServiceTests {
 
 	@Test
 	public void createUserShouldReturnUserDTO() {
-		UserDTO userDto = userService.createUser(UserMapper.toDto(userEntity));
+		UserDataDTO userDto = userService.createUser(userCreateDto);
 		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
 
 	@Test
 	public void updateUserShouldReturnUserDTOWhenExistingId() {
-		UserDTO userDto = userService.updateUser(existingId, UserMapper.toDto(userEntity));
+		UserDataDTO userDto = userService.updateUser(existingId, userUpdateDto);
 		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
 
 	@Test
 	public void updateUserShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
-				() -> userService.updateUser(nonExistingId, UserMapper.toDto(userEntity)));
+				() -> userService.updateUser(nonExistingId, userUpdateDto));
 	}
 
 	@Test

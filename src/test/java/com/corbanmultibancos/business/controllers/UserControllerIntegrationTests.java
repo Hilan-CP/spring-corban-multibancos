@@ -1,6 +1,5 @@
 package com.corbanmultibancos.business.controllers;
 
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,8 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.corbanmultibancos.business.dto.RoleDTO;
-import com.corbanmultibancos.business.dto.UserDTO;
+import com.corbanmultibancos.business.dto.UserCreateDTO;
+import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -38,7 +37,8 @@ public class UserControllerIntegrationTests {
 	private String existingUsername;
 	private String nonExistingUsername;
 	private String otherUsername;
-	private UserDTO userDto;
+	private UserCreateDTO userCreateDto;
+	private UserUpdateDTO userUpdateDTO;
 
 	@BeforeEach
 	void setUp() {
@@ -48,17 +48,18 @@ public class UserControllerIntegrationTests {
 		existingUsername = "florinda";
 		nonExistingUsername = "inexistente";
 		otherUsername = "zenobia";
-		userDto = new UserDTO(newUserId, "george", "george123", new RoleDTO(1L, null));
+		userCreateDto = new UserCreateDTO(newUserId, "george", "george123", 1L);
+		userUpdateDTO = new UserUpdateDTO("george", "123", null);
 	}
 
 	@Test
-	public void getUserByIdShouldReturnUserDTOWhenExistingId() throws Exception {
+	public void getUserByIdShouldReturnUserDataDTOWhenExistingId() throws Exception {
 		mockMvc.perform(get("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.employeeId").value(existingId))
 			.andExpect(jsonPath("$.username").exists())
-			.andExpect(jsonPath("$.password", nullValue()))
+			.andExpect(jsonPath("$.password").doesNotExist())
 			.andExpect(jsonPath("$.role.id").exists())
 			.andExpect(jsonPath("$.role.authority").exists());
 	}
@@ -71,7 +72,7 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
-	public void getUsersShouldReturnPageOfSingleUserDTOWhenExistingUsername() throws Exception {
+	public void getUsersShouldReturnPageOfSingleUserDataDTOWhenExistingUsername() throws Exception {
 		mockMvc.perform(get("/users?username={username}", existingUsername)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -88,7 +89,7 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
-	public void getUsersShouldReturnPageOfUserDTOWhenNoParameter() throws Exception {
+	public void getUsersShouldReturnPageOfUserDataDTOWhenNoParameter() throws Exception {
 		mockMvc.perform(get("/users")
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -96,24 +97,24 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
-	public void createUserShouldReturnUserDTOWhenValidData() throws Exception {
-		String userJson = objectMapper.writeValueAsString(userDto);
+	public void createUserShouldReturnUserDataDTOWhenValidData() throws Exception {
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isCreated())
-			.andExpect(jsonPath("$.employeeId").value(userDto.getEmployeeId()))
-			.andExpect(jsonPath("$.username").value(userDto.getUsername()))
-			.andExpect(jsonPath("$.password", nullValue()))
-			.andExpect(jsonPath("$.role.id").value(userDto.getRole().getId()))
+			.andExpect(jsonPath("$.employeeId").value(userCreateDto.getEmployeeId()))
+			.andExpect(jsonPath("$.username").value(userCreateDto.getUsername()))
+			.andExpect(jsonPath("$.password").doesNotExist())
+			.andExpect(jsonPath("$.role.id").value(userCreateDto.getRoleId()))
 			.andExpect(jsonPath("$.role.authority").exists());
 	}
 
 	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenEmployeeIdIsNull() throws Exception {
-		userDto.setEmployeeId(null);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userCreateDto.setEmployeeId(null);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
@@ -123,8 +124,8 @@ public class UserControllerIntegrationTests {
 
 	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenUsernameIsBlank() throws Exception {
-		userDto.setUsername(null);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userCreateDto.setUsername(null);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
@@ -134,8 +135,8 @@ public class UserControllerIntegrationTests {
 
 	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenPasswordIsBlank() throws Exception {
-		userDto.setPassword(null);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userCreateDto.setPassword(null);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
@@ -145,19 +146,19 @@ public class UserControllerIntegrationTests {
 
 	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenRoleIsNull() throws Exception {
-		userDto.setRole(null);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userCreateDto.setRoleId(null);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
-	
+
 	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenUniqueEmployeeIdViolation() throws Exception {
-		userDto.setEmployeeId(existingId);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userCreateDto.setEmployeeId(existingId);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
@@ -167,8 +168,8 @@ public class UserControllerIntegrationTests {
 
 	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenUniqueUsernameViolation() throws Exception {
-		userDto.setUsername(existingUsername);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userCreateDto.setUsername(existingUsername);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
@@ -177,23 +178,23 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
-	public void updateUserShouldReturnUserDTOWhenExistingId() throws Exception {
-		String userJson = objectMapper.writeValueAsString(userDto);
+	public void updateUserShouldReturnUserDataDTOWhenExistingId() throws Exception {
+		String userJson = objectMapper.writeValueAsString(userUpdateDTO);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.employeeId").value(existingId))
-			.andExpect(jsonPath("$.username").value(userDto.getUsername()))
-			.andExpect(jsonPath("$.password", nullValue()))
-			.andExpect(jsonPath("$.role.id").value(userDto.getRole().getId()))
+			.andExpect(jsonPath("$.username").value(userUpdateDTO.getUsername()))
+			.andExpect(jsonPath("$.password").doesNotExist())
+			.andExpect(jsonPath("$.role.id").exists())
 			.andExpect(jsonPath("$.role.authority").exists());
 	}
 
 	@Test
 	public void updateUserShouldReturnNotFoundWhenNonExistingId() throws Exception {
-		String userJson = objectMapper.writeValueAsString(userDto);
+		String userJson = objectMapper.writeValueAsString(userUpdateDTO);
 		mockMvc.perform(put("/users/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
@@ -203,8 +204,8 @@ public class UserControllerIntegrationTests {
 
 	@Test
 	public void updateUserShouldReturnUnprocessableEntityWhenUniqueUsernameViolation() throws Exception {
-		userDto.setUsername(otherUsername);
-		String userJson = objectMapper.writeValueAsString(userDto);
+		userUpdateDTO.setUsername(otherUsername);
+		String userJson = objectMapper.writeValueAsString(userUpdateDTO);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)

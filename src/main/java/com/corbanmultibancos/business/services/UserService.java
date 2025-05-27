@@ -10,7 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.corbanmultibancos.business.dto.UserDTO;
+import com.corbanmultibancos.business.dto.UserCreateDTO;
+import com.corbanmultibancos.business.dto.UserDataDTO;
+import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Role;
 import com.corbanmultibancos.business.entities.User;
@@ -37,14 +39,14 @@ public class UserService {
 	private RoleRepository roleRepository;
 
 	@Transactional(readOnly = true)
-	public UserDTO getUserById(Long id) {
+	public UserDataDTO getUserById(Long id) {
 		Optional<User> result = userRepository.findById(id);
 		User user = result.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
-		return UserMapper.toDto(user);
+		return UserMapper.toUserDataDto(user);
 	}
 
 	@Transactional(readOnly = true)
-	public Page<UserDTO> getUsers(String username, Pageable pageable) {
+	public Page<UserDataDTO> getUsers(String username, Pageable pageable) {
 		Page<User> userPage;
 		if (!username.isBlank()) {
 			userPage = getUserByUsername(username);
@@ -52,17 +54,17 @@ public class UserService {
 		else {
 			userPage = userRepository.findAll(pageable);
 		}
-		return userPage.map(user -> UserMapper.toDto(user));
+		return userPage.map(user -> UserMapper.toUserDataDto(user));
 	}
 
 	@Transactional
-	public UserDTO createUser(UserDTO userDto) {
+	public UserDataDTO createUser(UserCreateDTO userDto) {
 		try {
 			User user = new User();
-			UserMapper.copyDtoToEntity(userDto, user);
-			setEmployeeAndRole(user, userDto.getEmployeeId(), userDto.getRole().getId());
+			UserMapper.copyUserCreateDtoToEntity(userDto, user);
+			setEmployeeAndRole(user, userDto.getEmployeeId(), userDto.getRoleId());
 			user = userRepository.save(user);
-			return UserMapper.toDto(user);
+			return UserMapper.toUserDataDto(user);
 		}
 		catch(EntityNotFoundException e) {
 			throw new ResourceNotFoundException(NOT_FOUND);
@@ -70,13 +72,13 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDTO updateUser(Long id, UserDTO userDto) {
+	public UserDataDTO updateUser(Long id, UserUpdateDTO userDto) {
 		try {
 			User user = userRepository.getReferenceById(id);
-			UserMapper.copyDtoToEntity(userDto, user);
-			setEmployeeAndRole(user, userDto.getEmployeeId(), userDto.getRole().getId());
+			UserMapper.copyUserUpdateDtoToEntity(userDto, user);
+			setEmployeeAndRole(user, id, userDto.getRoleId());
 			user = userRepository.save(user);
-			return UserMapper.toDto(user);
+			return UserMapper.toUserDataDto(user);
 		}
 		catch(EntityNotFoundException e) {
 			throw new ResourceNotFoundException(NOT_FOUND);
@@ -106,7 +108,9 @@ public class UserService {
 	private void setEmployeeAndRole(User user, Long employeeId, Long roleId) {
 		Employee employee = employeeRepository.getReferenceById(employeeId);
 		user.setEmployee(employee);
-		Role role = roleRepository.getReferenceById(roleId);
-		user.setRole(role);
+		if(roleId != null) {
+			Role role = roleRepository.getReferenceById(roleId);
+			user.setRole(role);
+		}
 	}
 }

@@ -8,5 +8,7 @@ import com.corbanmultibancos.business.entities.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
+	boolean existsById(Long id);
+	
 	Optional<User> findByUsername(String username);
 }

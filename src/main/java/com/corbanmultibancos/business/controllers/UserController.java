@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.corbanmultibancos.business.dto.UserDTO;
+import com.corbanmultibancos.business.dto.UserCreateDTO;
+import com.corbanmultibancos.business.dto.UserDataDTO;
+import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.services.UserService;
 
 import jakarta.validation.Valid;
@@ -30,28 +32,28 @@ public class UserController {
 	private UserService userService;
 
 	@GetMapping("/{id}")
-	public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-		UserDTO userDto = userService.getUserById(id);
+	public ResponseEntity<UserDataDTO> getUserById(@PathVariable Long id) {
+		UserDataDTO userDto = userService.getUserById(id);
 		return ResponseEntity.ok(userDto);
 	}
 
 	@GetMapping
-	public ResponseEntity<Page<UserDTO>> getUsers(@RequestParam(defaultValue = "") String username,
+	public ResponseEntity<Page<UserDataDTO>> getUsers(@RequestParam(defaultValue = "") String username,
 												Pageable pageable) {
-		Page<UserDTO> userDtoPage = userService.getUsers(username, pageable);
+		Page<UserDataDTO> userDtoPage = userService.getUsers(username, pageable);
 		return ResponseEntity.ok(userDtoPage);
 	}
 
 	@PostMapping
-	public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDto) {
-		userDto = userService.createUser(userDto);
+	public ResponseEntity<UserDataDTO> createUser(@Valid @RequestBody UserCreateDTO userCreateDto) {
+		UserDataDTO userDto = userService.createUser(userCreateDto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").build(userDto.getEmployeeId());
 		return ResponseEntity.created(uri).body(userDto);
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDto) {
-		userDto = userService.updateUser(id, userDto);
+	public ResponseEntity<UserDataDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDto) {
+		UserDataDTO userDto = userService.updateUser(id, userUpdateDto);
 		return ResponseEntity.ok(userDto);
 	}
 
