@@ -58,7 +58,7 @@ public class EmployeeControllerIntegrationTests {
 			.andExpect(jsonPath("$.name").exists())
 			.andExpect(jsonPath("$.username").exists())
 			.andExpect(jsonPath("$.roleName").exists())
-			.andExpect(jsonPath("$.teamDto").exists());
+			.andExpect(jsonPath("$.team").exists());
 	}
 
 	@Test

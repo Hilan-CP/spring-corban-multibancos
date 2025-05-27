@@ -93,7 +93,6 @@ public class UserService {
 		//remover associação antes de deletar
 		Employee employee = employeeRepository.findById(id).get();
 		employee.setUser(null);
-		employeeRepository.save(employee);
 		userRepository.deleteById(id);
 	}
 

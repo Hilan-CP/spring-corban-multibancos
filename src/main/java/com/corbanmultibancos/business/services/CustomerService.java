@@ -75,16 +75,17 @@ public class CustomerService {
 	}
 
 	private void validateParameters(String cpf, String name, String phone) {
-		if(!cpf.isBlank() && !name.isBlank() && !phone.isBlank()) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+		int countParams = 0;
+		if(!cpf.isBlank()) {
+			countParams++;
 		}
-		if(!cpf.isBlank() && !name.isBlank()) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+		if(!name.isBlank()) {
+			countParams++;
 		}
-		if(!cpf.isBlank() && !phone.isBlank()) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+		if(!phone.isBlank()) {
+			countParams++;
 		}
-		if(!name.isBlank() && !phone.isBlank()) {
+		if(countParams > 1) {
 			throw new IllegalParameterException(MULTIPLE_PARAMS);
 		}
 	}
@@ -92,8 +93,7 @@ public class CustomerService {
 	private Page<Customer> getCustomerByCpf(String cpf) {
 		Optional<Customer> result = customerRepository.findByCpf(cpf);
 		if(result.isPresent()) {
-			Customer customer = result.get();
-			return new PageImpl<>(List.of(customer));
+			return new PageImpl<>(List.of(result.get()));
 		}
 		return Page.empty();
 	}
