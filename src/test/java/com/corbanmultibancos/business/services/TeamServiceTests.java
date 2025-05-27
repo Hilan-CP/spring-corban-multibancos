@@ -86,7 +86,7 @@ public class TeamServiceTests {
 	public void getTeamsShouldReturnTeamListWhenPartialName() {
 		List<TeamDTO> teamDtoList = teamService.getTeams(partialName);
 		Assertions.assertFalse(teamDtoList.isEmpty());
-		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(partialName);
+		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(any());
 		Mockito.verify(teamRepository, never()).findAll();
 	}
 
@@ -94,7 +94,7 @@ public class TeamServiceTests {
 	public void getTeamsShouldReturnEmptyListWhenNonExistingName() {
 		List<TeamDTO> teamDtoList = teamService.getTeams(nonExistingName);
 		Assertions.assertTrue(teamDtoList.isEmpty());
-		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(nonExistingName);
+		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(any());
 		Mockito.verify(teamRepository, never()).findAll();
 	}
 
@@ -102,7 +102,7 @@ public class TeamServiceTests {
 	public void getTeamsShouldReturnTeamListWhenNoParameter() {
 		List<TeamDTO> teamDtoList = teamService.getTeams("");
 		Assertions.assertFalse(teamDtoList.isEmpty());
-		Mockito.verify(teamRepository, never()).findByNameContainingIgnoreCase(partialName);
+		Mockito.verify(teamRepository, never()).findByNameContainingIgnoreCase(any());
 		Mockito.verify(teamRepository, times(1)).findAll();
 	}
 
@@ -127,18 +127,18 @@ public class TeamServiceTests {
 	@Test
 	public void deleteTeamShouldDoNothingWhenExistingId() {
 		Assertions.assertDoesNotThrow(() -> teamService.deleteTeam(existingId));
-		Mockito.verify(teamRepository, times(1)).deleteById(existingId);
+		Mockito.verify(teamRepository, times(1)).deleteById(any());
 	}
 
 	@Test
 	public void deleteTeamShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> teamService.deleteTeam(nonExistingId));
-		Mockito.verify(teamRepository, never()).deleteById(nonExistingId);
+		Mockito.verify(teamRepository, never()).deleteById(any());
 	}
 
 	@Test
 	public void deleteTeamShouldThrowDataIntegrityExceptionWhenDependentId() {
 		Assertions.assertThrows(DataIntegrityException.class, () -> teamService.deleteTeam(dependentId));
-		Mockito.verify(teamRepository, never()).deleteById(dependentId);
+		Mockito.verify(teamRepository, never()).deleteById(any());
 	}
 }

@@ -1,13 +1,13 @@
 package com.corbanmultibancos.business.mappers;
 
-import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
+import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.corbanmultibancos.business.dto.EmployeeUserDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Team;
 
 public class EmployeeMapper {
 
-	public static void copyEmployeeCreationDtoToEntity(EmployeeCreationDTO dto, Employee entity) {
+	public static void copyEmployeeCreationDtoToEntity(EmployeeCreateDTO dto, Employee entity) {
 		entity.setCpf(dto.getCpf());
 		entity.setName(dto.getName());
 		if(dto.getTeamId() != null) {
@@ -15,8 +15,8 @@ public class EmployeeMapper {
 		}
 	}
 
-	public static EmployeeCreationDTO toEmployeeCreationDto(Employee entity) {
-		EmployeeCreationDTO dto = new EmployeeCreationDTO();
+	public static EmployeeCreateDTO toEmployeeCreationDto(Employee entity) {
+		EmployeeCreateDTO dto = new EmployeeCreateDTO();
 		dto.setId(entity.getId());
 		dto.setCpf(entity.getCpf());
 		dto.setName(entity.getName());

@@ -72,12 +72,13 @@ public class BankControllerIntegrationTests {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isNotEmpty());
 	}
-	
+
 	@Test
-	public void getBanksShouldReturnNotFoundWhenNonExistingCode() throws Exception {
+	public void getBanksShouldReturnEmptyListWhenNonExistingCode() throws Exception {
 		mockMvc.perform(get("/banks?code={code}", nonExistingCode)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(status().isNotFound());
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isEmpty());
 	}
 	
 	@Test

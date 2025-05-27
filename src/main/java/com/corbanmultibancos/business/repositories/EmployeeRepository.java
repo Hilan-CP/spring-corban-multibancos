@@ -11,6 +11,8 @@ import com.corbanmultibancos.business.entities.Employee;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
 	boolean existsByTeamId(Long teamId);
+	
+	boolean existsById(Long id);
 
 	Optional<Employee> findByCpf(String cpf);
 

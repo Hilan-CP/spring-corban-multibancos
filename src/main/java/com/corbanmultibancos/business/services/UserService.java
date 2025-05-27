@@ -1,0 +1,115 @@
+package com.corbanmultibancos.business.services;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.corbanmultibancos.business.dto.UserCreateDTO;
+import com.corbanmultibancos.business.dto.UserDataDTO;
+import com.corbanmultibancos.business.dto.UserUpdateDTO;
+import com.corbanmultibancos.business.entities.Employee;
+import com.corbanmultibancos.business.entities.Role;
+import com.corbanmultibancos.business.entities.User;
+import com.corbanmultibancos.business.mappers.UserMapper;
+import com.corbanmultibancos.business.repositories.EmployeeRepository;
+import com.corbanmultibancos.business.repositories.RoleRepository;
+import com.corbanmultibancos.business.repositories.UserRepository;
+import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+public class UserService {
+	private static final String USER_NOT_FOUND = "Usuário não encontrado";
+	private static final String NOT_FOUND = "Usuário, funcionário ou role não foram encontrados";
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private EmployeeRepository employeeRepository;
+
+	@Autowired
+	private RoleRepository roleRepository;
+
+	@Transactional(readOnly = true)
+	public UserDataDTO getUserById(Long id) {
+		Optional<User> result = userRepository.findById(id);
+		User user = result.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+		return UserMapper.toUserDataDto(user);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<UserDataDTO> getUsers(String username, Pageable pageable) {
+		Page<User> userPage;
+		if (!username.isBlank()) {
+			userPage = getUserByUsername(username);
+		}
+		else {
+			userPage = userRepository.findAll(pageable);
+		}
+		return userPage.map(user -> UserMapper.toUserDataDto(user));
+	}
+
+	@Transactional
+	public UserDataDTO createUser(UserCreateDTO userDto) {
+		try {
+			User user = new User();
+			UserMapper.copyUserCreateDtoToEntity(userDto, user);
+			setEmployeeAndRole(user, userDto.getEmployeeId(), userDto.getRoleId());
+			user = userRepository.save(user);
+			return UserMapper.toUserDataDto(user);
+		}
+		catch(EntityNotFoundException e) {
+			throw new ResourceNotFoundException(NOT_FOUND);
+		}
+	}
+
+	@Transactional
+	public UserDataDTO updateUser(Long id, UserUpdateDTO userDto) {
+		try {
+			User user = userRepository.getReferenceById(id);
+			UserMapper.copyUserUpdateDtoToEntity(userDto, user);
+			setEmployeeAndRole(user, id, userDto.getRoleId());
+			user = userRepository.save(user);
+			return UserMapper.toUserDataDto(user);
+		}
+		catch(EntityNotFoundException e) {
+			throw new ResourceNotFoundException(NOT_FOUND);
+		}
+	}
+
+	@Transactional
+	public void deleteUser(Long id) {
+		if(!userRepository.existsById(id)) {
+			throw new ResourceNotFoundException(USER_NOT_FOUND);
+		}
+		//remover associação antes de deletar
+		Employee employee = employeeRepository.findById(id).get();
+		employee.setUser(null);
+		userRepository.deleteById(id);
+	}
+
+	private Page<User> getUserByUsername(String username) {
+		Optional<User> result = userRepository.findByUsername(username);
+		if (result.isPresent()) {
+			return new PageImpl<>(List.of(result.get()));
+		}
+		return Page.empty();
+	}
+
+	private void setEmployeeAndRole(User user, Long employeeId, Long roleId) {
+		Employee employee = employeeRepository.getReferenceById(employeeId);
+		user.setEmployee(employee);
+		if(roleId != null) {
+			Role role = roleRepository.getReferenceById(roleId);
+			user.setRole(role);
+		}
+	}
+}
