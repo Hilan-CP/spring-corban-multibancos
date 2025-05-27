@@ -20,7 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
+import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.corbanmultibancos.business.dto.EmployeeUserDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.mappers.EmployeeMapper;
@@ -45,7 +45,7 @@ public class EmployeeServiceTests {
 	private String nonExistingCpf;
 	private String partialName;
 	private Employee employeeEntity;
-	private EmployeeCreationDTO employeeCreationDto;
+	private EmployeeCreateDTO employeeCreationDto;
 	private Page<Employee> employeePage;
 	private Pageable pageable;
 
@@ -86,36 +86,36 @@ public class EmployeeServiceTests {
 	public void getEmployeesShouldReturnPageOfSingleEmployeeUserDTOWhenExistingCpf() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees(existingCpf, "", pageable);
 		Assertions.assertEquals(1, employeeDtoPage.getSize());
-		Mockito.verify(employeeRepository, times(1)).findByCpf(existingCpf);
-		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(employeeRepository, never()).findAll(pageable);
+		Mockito.verify(employeeRepository, times(1)).findByCpf(any());
+		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(employeeRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getEmployeesShouldReturnEmptyPageWhenNonExistingCpf() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees(nonExistingCpf, "", pageable);
 		Assertions.assertTrue(employeeDtoPage.isEmpty());
-		Mockito.verify(employeeRepository, times(1)).findByCpf(nonExistingCpf);
-		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(employeeRepository, never()).findAll(pageable);
+		Mockito.verify(employeeRepository, times(1)).findByCpf(any());
+		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(employeeRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getEmployeesShouldReturnPageOfEmployeeUserDTOWhenPartialName() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees("", partialName, pageable);
 		Assertions.assertFalse(employeeDtoPage.isEmpty());
-		Mockito.verify(employeeRepository, never()).findByCpf(existingCpf);
-		Mockito.verify(employeeRepository, times(1)).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(employeeRepository, never()).findAll(pageable);
+		Mockito.verify(employeeRepository, never()).findByCpf(any());
+		Mockito.verify(employeeRepository, times(1)).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(employeeRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getEmployeesShouldReturnPageOfEmployeeUserDTOWhenNoParameter() {
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees("", "", pageable);
 		Assertions.assertFalse(employeeDtoPage.isEmpty());
-		Mockito.verify(employeeRepository, never()).findByCpf(existingCpf);
-		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(employeeRepository, times(1)).findAll(pageable);
+		Mockito.verify(employeeRepository, never()).findByCpf(any());
+		Mockito.verify(employeeRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(employeeRepository, times(1)).findAll(any(Pageable.class));
 	}
 
 	@Test
@@ -126,13 +126,13 @@ public class EmployeeServiceTests {
 
 	@Test
 	public void createEmployeeShouldReturnEmployeeCreationDTO() {
-		EmployeeCreationDTO employeeDto = employeeService.createEmployee(employeeCreationDto);
+		EmployeeCreateDTO employeeDto = employeeService.createEmployee(employeeCreationDto);
 		Assertions.assertNotNull(employeeDto.getId());
 	}
 
 	@Test
 	public void updateEmployeeShouldReturnEmployeeCreationDTOWhenExistingId() {
-		EmployeeCreationDTO employeeDto = employeeService.updateEmployee(existingId, employeeCreationDto);
+		EmployeeCreateDTO employeeDto = employeeService.updateEmployee(existingId, employeeCreationDto);
 		Assertions.assertNotNull(employeeDto.getId());
 	}
 

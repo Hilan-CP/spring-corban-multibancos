@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
+import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.corbanmultibancos.business.dto.EmployeeUserDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.mappers.EmployeeMapper;
@@ -52,7 +52,7 @@ public class EmployeeService {
 	}
 
 	@Transactional
-	public EmployeeCreationDTO createEmployee(EmployeeCreationDTO employeeDto) {
+	public EmployeeCreateDTO createEmployee(EmployeeCreateDTO employeeDto) {
 		Employee employee = new Employee();
 		EmployeeMapper.copyEmployeeCreationDtoToEntity(employeeDto, employee);
 		employee = employeeRepository.save(employee);
@@ -60,7 +60,7 @@ public class EmployeeService {
 	}
 
 	@Transactional
-	public EmployeeCreationDTO updateEmployee(Long id, EmployeeCreationDTO employeeDto) {
+	public EmployeeCreateDTO updateEmployee(Long id, EmployeeCreateDTO employeeDto) {
 		try {
 			Employee employee = employeeRepository.getReferenceById(id);
 			EmployeeMapper.copyEmployeeCreationDtoToEntity(employeeDto, employee);

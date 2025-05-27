@@ -101,7 +101,7 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
-	public void updateTeamShouldReturnTeamDTOWhenExistingId() throws Exception {
+	public void updateTeamShouldReturnTeamDTOWhenExistingIdAndValidData() throws Exception {
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(put("/teams/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
@@ -120,6 +120,17 @@ public class TeamControllerIntegrationTests {
 				.content(teamJson)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	public void updateTeamShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
+		teamDto.setName(null);
+		String teamJson = objectMapper.writeValueAsString(teamDto);
+		mockMvc.perform(put("/teams/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(teamJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test

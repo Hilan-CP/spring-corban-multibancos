@@ -6,14 +6,14 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
+import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class EmployeeCreationDTOValidator implements ConstraintValidator<EmployeeCreationDTOValid, EmployeeCreationDTO> {
+public class EmployeeCreationDTOValidator implements ConstraintValidator<EmployeeCreationDTOValid, EmployeeCreateDTO> {
 
 	@Autowired
 	private ValidatorUtil validatorUtil;
@@ -22,7 +22,7 @@ public class EmployeeCreationDTOValidator implements ConstraintValidator<Employe
 	private EmployeeRepository repository;
 
 	@Override
-	public boolean isValid(EmployeeCreationDTO employeeDto, ConstraintValidatorContext context) {
+	public boolean isValid(EmployeeCreateDTO employeeDto, ConstraintValidatorContext context) {
 		Map<String, String> errors = new HashMap<>();
 		if (isCpfUnavailable(employeeDto)) {
 			errors.put("cpf", "O CPF informado já está sendo usado por outro funcionário");
@@ -31,7 +31,7 @@ public class EmployeeCreationDTOValidator implements ConstraintValidator<Employe
 		return errors.isEmpty();
 	}
 
-	private boolean isCpfUnavailable(EmployeeCreationDTO employeeDto) {
+	private boolean isCpfUnavailable(EmployeeCreateDTO employeeDto) {
 		Long employeeId = validatorUtil.getIdPathVariable();
 		Optional<Employee> employee = repository.findByCpf(employeeDto.getCpf());
 		return employee.isPresent() && employee.get().getId() != employeeId;

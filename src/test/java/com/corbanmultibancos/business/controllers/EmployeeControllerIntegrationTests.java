@@ -15,7 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
+import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -35,7 +35,7 @@ public class EmployeeControllerIntegrationTests {
 	private String nonExistingCpf;
 	private String otherCpf;
 	private String partialName;
-	private EmployeeCreationDTO employeeCreationDto;
+	private EmployeeCreateDTO employeeCreationDto;
 
 	@BeforeEach
 	void setUp() {
@@ -45,7 +45,7 @@ public class EmployeeControllerIntegrationTests {
 		nonExistingCpf = "00011122233";
 		otherCpf = "33701848009";
 		partialName = "jo";
-		employeeCreationDto = new EmployeeCreationDTO(null, "01234567890", "Novo Funcionário", 1L);
+		employeeCreationDto = new EmployeeCreateDTO(null, "01234567890", "Novo Funcionário", 1L);
 	}
 
 	@Test

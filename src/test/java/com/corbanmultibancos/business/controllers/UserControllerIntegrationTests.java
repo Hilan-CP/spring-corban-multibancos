@@ -178,7 +178,7 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
-	public void updateUserShouldReturnUserDataDTOWhenExistingId() throws Exception {
+	public void updateUserShouldReturnUserDataDTOWhenExistingIdAndValidData() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userUpdateDTO);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)

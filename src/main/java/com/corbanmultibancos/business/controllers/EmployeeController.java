@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.corbanmultibancos.business.dto.EmployeeCreationDTO;
+import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.corbanmultibancos.business.dto.EmployeeUserDTO;
 import com.corbanmultibancos.business.services.EmployeeService;
 
@@ -44,15 +44,15 @@ public class EmployeeController {
 	}
 
 	@PostMapping
-	public ResponseEntity<EmployeeCreationDTO> createEmployee(@Valid @RequestBody EmployeeCreationDTO employeeDto) {
+	public ResponseEntity<EmployeeCreateDTO> createEmployee(@Valid @RequestBody EmployeeCreateDTO employeeDto) {
 		employeeDto = employeeService.createEmployee(employeeDto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").build(employeeDto.getId());
 		return ResponseEntity.created(uri).body(employeeDto);
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<EmployeeCreationDTO> updateEmployee(@PathVariable Long id,
-														@Valid @RequestBody EmployeeCreationDTO employeeDto) {
+	public ResponseEntity<EmployeeCreateDTO> updateEmployee(@PathVariable Long id,
+														@Valid @RequestBody EmployeeCreateDTO employeeDto) {
 		employeeDto = employeeService.updateEmployee(id, employeeDto);
 		return ResponseEntity.ok(employeeDto);
 	}

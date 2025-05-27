@@ -5,7 +5,7 @@ import com.corbanmultibancos.business.validations.EmployeeCreationDTOValid;
 import jakarta.validation.constraints.NotBlank;
 
 @EmployeeCreationDTOValid
-public class EmployeeCreationDTO {
+public class EmployeeCreateDTO {
 
 	private Long id;
 	
@@ -17,10 +17,10 @@ public class EmployeeCreationDTO {
 	
 	private Long teamId;
 
-	public EmployeeCreationDTO() {
+	public EmployeeCreateDTO() {
 	}
 
-	public EmployeeCreationDTO(Long id, String cpf, String name, Long teamId) {
+	public EmployeeCreateDTO(Long id, String cpf, String name, Long teamId) {
 		this.id = id;
 		this.cpf = cpf;
 		this.name = name;

@@ -123,7 +123,6 @@ public class BankServiceTests {
 	@Test
 	public void getBanksShouldThrowIllegalParameterExceptionWhenBothParameters() {
 		Assertions.assertThrows(IllegalParameterException.class, () -> bankService.getBanks(existingCode, partialName));
-
 	}
 
 	@Test

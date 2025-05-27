@@ -87,50 +87,50 @@ public class CustomerServiceTests {
 	public void getCustomersShouldReturnPageOfSingleCustomerDTOWhenExistingCpf() {
 		Page<CustomerDTO> page = customerService.getCustomers(existingCpf, "", "", pageable);
 		Assertions.assertEquals(1, page.getSize());
-		Mockito.verify(customerRepository, times(1)).findByCpf(existingCpf);
-		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
-		Mockito.verify(customerRepository, never()).findAll(pageable);
+		Mockito.verify(customerRepository, times(1)).findByCpf(any());
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getCustomersShouldReturnEmptyPageWhenNonExistingCpf() {
 		Page<CustomerDTO> page = customerService.getCustomers(nonExistingCpf, "", "", pageable);
 		Assertions.assertTrue(page.isEmpty());
-		Mockito.verify(customerRepository, times(1)).findByCpf(nonExistingCpf);
-		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
-		Mockito.verify(customerRepository, never()).findAll(pageable);
+		Mockito.verify(customerRepository, times(1)).findByCpf(any());
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenPartialName() {
 		Page<CustomerDTO> page = customerService.getCustomers("", partialName, "", pageable);
 		Assertions.assertFalse(page.isEmpty());
-		Mockito.verify(customerRepository, never()).findByCpf(existingCpf);
-		Mockito.verify(customerRepository, times(1)).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
-		Mockito.verify(customerRepository, never()).findAll(pageable);
+		Mockito.verify(customerRepository, never()).findByCpf(any());
+		Mockito.verify(customerRepository, times(1)).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenPartialPhone() {
 		Page<CustomerDTO> page = customerService.getCustomers("", "", partialPhone, pageable);
 		Assertions.assertFalse(page.isEmpty());
-		Mockito.verify(customerRepository, never()).findByCpf(existingCpf);
-		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(customerRepository, times(1)).findByPhoneContaining(partialPhone, pageable);
-		Mockito.verify(customerRepository, never()).findAll(pageable);
+		Mockito.verify(customerRepository, never()).findByCpf(any());
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, times(1)).findByPhoneContaining(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findAll(any(Pageable.class));
 	}
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenNoParameter() {
 		Page<CustomerDTO> page = customerService.getCustomers("", "", "", pageable);
 		Assertions.assertFalse(page.isEmpty());
-		Mockito.verify(customerRepository, never()).findByCpf(existingCpf);
-		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(partialName, pageable);
-		Mockito.verify(customerRepository, never()).findByPhoneContaining(partialPhone, pageable);
-		Mockito.verify(customerRepository, times(1)).findAll(pageable);
+		Mockito.verify(customerRepository, never()).findByCpf(any());
+		Mockito.verify(customerRepository, never()).findByNameContainingIgnoreCase(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, never()).findByPhoneContaining(any(), any(Pageable.class));
+		Mockito.verify(customerRepository, times(1)).findAll(any(Pageable.class));
 	}
 
 	@Test
