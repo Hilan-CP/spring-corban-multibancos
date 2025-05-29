@@ -23,7 +23,7 @@ public class ProposalMapper {
 		dto.setGeneration(entity.getGeneration());
 		dto.setPayment(entity.getPayment());
 		dto.setStatus(entity.getStatus());
-		dto.setEmployeeName(entity.getBank().getName());
+		dto.setEmployeeName(entity.getEmployee().getName());
 		dto.setBankName(entity.getBank().getName());
 		dto.setCustomerCpf(entity.getCustomer().getCpf());
 		dto.setCustomerName(entity.getCustomer().getName());
