@@ -38,14 +38,9 @@ public class ProposalService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ProposalDataDTO> getProposals(Integer code, String employeeName, Integer bankCode, String dateFieldName,
+	public Page<ProposalDataDTO> getProposals(String code, String employeeName, Integer bankCode, String dateFieldName,
 			LocalDate beginDate, LocalDate endDate, Pageable pageable) {
-		Map<String, Object> fields = new HashMap<>();
-		fields.put("dateField", "generation");
-		fields.put("beginDate", LocalDate.of(2025, 1, 1));
-		fields.put("endDate", LocalDate.now());
-		fields.put("employeeName", "jo");
-		return proposalRepository.findBy(fields, pageable);
+		return null;
 	}
 
 	@Transactional
