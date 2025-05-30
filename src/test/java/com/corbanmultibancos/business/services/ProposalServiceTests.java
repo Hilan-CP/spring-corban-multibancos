@@ -32,6 +32,7 @@ import com.corbanmultibancos.business.repositories.BankRepository;
 import com.corbanmultibancos.business.repositories.CustomerRepository;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.ProposalRepository;
+import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -88,8 +89,8 @@ public class ProposalServiceTests {
 		proposalEntity = new Proposal(existingId, existingCode, 1000.0, beginDate, endDate, ProposalStatus.CONTRATADA,
 				employee, customer, bank);
 		proposalDtoPage = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
-		proposalCreateDto = new ProposalCreateDTO(null, "123ABC", 100.0, beginDate, endDate,
-				employee.getId(), customer.getId(), bank.getId());
+		proposalCreateDto = new ProposalCreateDTO(null, "123ABC", 100.0, beginDate, endDate, employee.getId(),
+				customer.getId(), bank.getId());
 		pageable = PageRequest.of(0, 10);
 		Mockito.when(proposalRepository.findById(existingId)).thenReturn(Optional.of(proposalEntity));
 		Mockito.when(proposalRepository.findById(nonExistingId)).thenReturn(Optional.empty());
@@ -120,50 +121,61 @@ public class ProposalServiceTests {
 
 	@Test
 	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCode() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(existingCode, "", 0, dateFieldName, beginDate, endDate, pageable);
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(existingCode, "", 0, dateFieldName, beginDate,
+				endDate, pageable);
 		Assertions.assertEquals(1, dtoPage.getSize());
 	}
 
 	@Test
 	public void getProposalsShouldReturnEmptyPageWhenNonExistingCode() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(nonExistingCode, "", 0, dateFieldName, beginDate, endDate, pageable);
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(nonExistingCode, "", 0, dateFieldName, beginDate,
+				endDate, pageable);
 		Assertions.assertTrue(dtoPage.isEmpty());
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndBankCodeNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", bankCode, dateFieldName, beginDate, endDate, pageable);
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", bankCode, dateFieldName, beginDate,
+				endDate, pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndEmployeeNameNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", partialEmployeeName, 0, dateFieldName, beginDate, endDate, pageable);
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", partialEmployeeName, 0, dateFieldName,
+				beginDate, endDate, pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", 0, dateFieldName, beginDate, endDate, pageable);
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", 0, dateFieldName, beginDate, endDate,
+				pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
 	}
 
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenBankCodeAndEmployeNameNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", partialEmployeeName, bankCode, dateFieldName, beginDate, endDate, pageable);
-		Assertions.assertFalse(dtoPage.isEmpty());
+		Assertions.assertThrows(IllegalParameterException.class,
+				() -> proposalService.getProposals("", partialEmployeeName, bankCode, dateFieldName, beginDate, endDate, pageable));
 	}
 
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenDateIsNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", bankCode, dateFieldName, null, null, pageable);
-		Assertions.assertFalse(dtoPage.isEmpty());
+		Assertions.assertThrows(IllegalParameterException.class,
+				() -> proposalService.getProposals("", "", bankCode, dateFieldName, null, null, pageable));
 	}
 
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenInvalidDateField() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", bankCode, "invalid field name", beginDate, endDate, pageable);
-		Assertions.assertFalse(dtoPage.isEmpty());
+		Assertions.assertThrows(IllegalParameterException.class,
+				() -> proposalService.getProposals("", "", bankCode, "invalid field name", beginDate, endDate, pageable));
+	}
+	
+	@Test
+	public void getProposalsShouldReturnIllegalParameterExceptionWhenBeginDateIsAfterEndDate() {
+		Assertions.assertThrows(IllegalParameterException.class,
+				() -> proposalService.getProposals("", "", bankCode, "invalid field name", endDate.plusDays(1L), endDate, pageable));
 	}
 
 	@Test
@@ -175,19 +187,22 @@ public class ProposalServiceTests {
 	@Test
 	public void createProposalShouldThrowResourceNotFoundExceptionWhenNonExistingEmployee() {
 		proposalCreateDto.setEmployeeId(nonExistingId);
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.createProposal(proposalCreateDto));
+		Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> proposalService.createProposal(proposalCreateDto));
 	}
 
 	@Test
 	public void createProposalShouldThrowResourceNotFoundExceptionWhenNonExistingBank() {
 		proposalCreateDto.setBankId(nonExistingId);
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.createProposal(proposalCreateDto));
+		Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> proposalService.createProposal(proposalCreateDto));
 	}
 
 	@Test
 	public void createProposalShouldThrowResourceNotFoundExceptionWhenNonExistingCustomer() {
 		proposalCreateDto.setCustomerId(nonExistingId);
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.createProposal(proposalCreateDto));
+		Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> proposalService.createProposal(proposalCreateDto));
 	}
 
 	@Test
@@ -198,6 +213,7 @@ public class ProposalServiceTests {
 
 	@Test
 	public void updateProposalShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
-		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.updateProposal(nonExistingId, proposalCreateDto));
+		Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> proposalService.updateProposal(nonExistingId, proposalCreateDto));
 	}
 }
