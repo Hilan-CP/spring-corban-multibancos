@@ -2,10 +2,19 @@ package com.corbanmultibancos.business.dto;
 
 import java.time.LocalDate;
 
+import com.corbanmultibancos.business.validations.CreateGroup;
+
+import jakarta.validation.constraints.NotNull;
+
 public class ProposalCreateDTO extends ProposalDTO {
 
+	@NotNull(message = "Obrigatório informar o funcionário responsável pela proposta", groups = CreateGroup.class)
 	private Long employeeId;
+
+	@NotNull(message = "Obrigatório informar o cliente da proposta", groups = CreateGroup.class)
 	private Long customerId;
+
+	@NotNull(message = "Obrigatório informar o banco da proposta", groups = CreateGroup.class)
 	private Long bankId;
 
 	public ProposalCreateDTO() {

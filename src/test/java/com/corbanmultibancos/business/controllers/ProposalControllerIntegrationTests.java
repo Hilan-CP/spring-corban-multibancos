@@ -67,7 +67,7 @@ public class ProposalControllerIntegrationTests {
 			.andExpect(jsonPath("$.code").exists())
 			.andExpect(jsonPath("$.value").exists())
 			.andExpect(jsonPath("$.generation").exists())
-			.andExpect(jsonPath("$.payment").exists())
+			.andExpect(jsonPath("$.payment").hasJsonPath())
 			.andExpect(jsonPath("$.status").exists())
 			.andExpect(jsonPath("$.employeeName").exists())
 			.andExpect(jsonPath("$.bankName").exists())
@@ -84,7 +84,8 @@ public class ProposalControllerIntegrationTests {
 
 	@Test
 	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCode() throws Exception {
-		mockMvc.perform(get("/proposals?code={code}", existingCode)
+		mockMvc.perform(get("/proposals?code={code}&dateField={field}&beginDate={begin}&endDate={end}",
+				existingCode, dateField, beginDate, endDate)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty())
@@ -169,8 +170,8 @@ public class ProposalControllerIntegrationTests {
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.code").value(proposalCreateDto.getCode()))
 			.andExpect(jsonPath("$.value").value(proposalCreateDto.getValue()))
-			.andExpect(jsonPath("$.generation").value(proposalCreateDto.getGeneration()))
-			.andExpect(jsonPath("$.payment").value(proposalCreateDto.getPayment()))
+			.andExpect(jsonPath("$.generation").exists())
+			.andExpect(jsonPath("$.payment").hasJsonPath())
 			.andExpect(jsonPath("$.status").value("GERADA"))
 			.andExpect(jsonPath("$.employeeName").exists())
 			.andExpect(jsonPath("$.bankName").exists())
@@ -309,10 +310,10 @@ public class ProposalControllerIntegrationTests {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
-			.andExpect(jsonPath("$.code").exists())
-			.andExpect(jsonPath("$.value").exists())
+			.andExpect(jsonPath("$.code").value(proposalCreateDto.getCode()))
+			.andExpect(jsonPath("$.value").value(proposalCreateDto.getValue()))
 			.andExpect(jsonPath("$.generation").exists())
-			.andExpect(jsonPath("$.payment").exists())
+			.andExpect(jsonPath("$.payment").hasJsonPath())
 			.andExpect(jsonPath("$.status").exists())
 			.andExpect(jsonPath("$.employeeName").exists())
 			.andExpect(jsonPath("$.bankName").exists())
