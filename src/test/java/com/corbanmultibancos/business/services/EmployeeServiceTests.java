@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -140,5 +141,19 @@ public class EmployeeServiceTests {
 	public void updateEmployeeShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> employeeService.updateEmployee(nonExistingId, employeeCreationDto));
+	}
+
+	@Test
+	public void getEmployeesAsCsvDataShouldReturnByteArray() {
+		Page<EmployeeUserDTO> page = new PageImpl<>(List.of(EmployeeMapper.toEmployeeUserDTO(employeeEntity)));
+		EmployeeService serviceSpy = Mockito.spy(employeeService);
+		Mockito.doReturn(page).when(serviceSpy).getEmployees("", "", Pageable.unpaged());
+		byte[] csvData = serviceSpy.getEmployeesAsCsvData("", "");
+		String content = new String(csvData, StandardCharsets.UTF_8);
+		Assertions.assertNotNull(csvData);
+		Assertions.assertTrue(content.contains("ID;CPF;Nome;Usuário;Tipo_Usuário;ID_Equipe;Nome_Equipe"));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getId().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getCpf()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getName()));
 	}
 }

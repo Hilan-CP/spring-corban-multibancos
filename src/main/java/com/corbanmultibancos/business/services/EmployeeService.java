@@ -1,5 +1,7 @@
 package com.corbanmultibancos.business.services;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +51,33 @@ public class EmployeeService {
 			page = employeeRepository.findAll(pageable);
 		}
 		return page.map(employee -> EmployeeMapper.toEmployeeUserDTO(employee));
+	}
+
+	public byte[] getEmployeesAsCsvData(String cpf, String name) {
+		Page<EmployeeUserDTO> result = getEmployees(cpf, name, Pageable.unpaged());
+		List<EmployeeUserDTO> employeeDtoList = result.getContent();
+		ByteArrayOutputStream inMemoryOutput = new ByteArrayOutputStream();
+		PrintWriter writer = new PrintWriter(inMemoryOutput);
+		writer.println("ID;CPF;Nome;Usuário;Tipo_Usuário;ID_Equipe;Nome_Equipe");
+		for(EmployeeUserDTO employeeDto : employeeDtoList) {
+			String teamId = "null";
+			String teamName = "null";
+			if(employeeDto.getTeam() != null) {
+				teamId = employeeDto.getTeam().getId().toString();
+				teamName = employeeDto.getTeam().getName();
+			}
+			writer.println(String.join(";",
+					employeeDto.getId().toString(),
+					employeeDto.getCpf(),
+					employeeDto.getName(),
+					employeeDto.getUsername(),
+					employeeDto.getRoleName(),
+					teamId,
+					teamName));
+		}
+		writer.flush();
+		writer.close();
+		return inMemoryOutput.toByteArray();
 	}
 
 	@Transactional

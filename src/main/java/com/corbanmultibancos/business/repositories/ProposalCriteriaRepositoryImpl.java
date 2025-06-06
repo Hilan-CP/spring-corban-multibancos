@@ -35,11 +35,13 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 		criteria.where(predicateBuilder(filter, root, builder));
 
 		TypedQuery<ProposalDataDTO> query = entityManager.createQuery(criteria);
-		query.setFirstResult((int) pageable.getOffset());
-		query.setMaxResults(pageable.getPageSize());
+		Long count = 0L;
+		if(pageable.isPaged()) {
+			query.setFirstResult((int) pageable.getOffset());
+			query.setMaxResults(pageable.getPageSize());
+			count = countQuery(filter);
+		}
 		List<ProposalDataDTO> result = query.getResultList();
-		
-		Long count = countQuery(filter);
 		return new PageImpl<>(result, pageable, count);
 	}
 

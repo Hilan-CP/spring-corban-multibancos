@@ -1,5 +1,7 @@
 package com.corbanmultibancos.business.services;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -79,13 +81,30 @@ public class ProposalService {
 		return page;
 	}
 
-	private Page<ProposalDataDTO> getProposalByCode(String code) {
-		Optional<Proposal> result = proposalRepository.findByCode(code);
-		if(result.isPresent()) {
-			ProposalDataDTO proposalDto = ProposalMapper.toProposalDataDto(result.get());
-			return new PageImpl<>(List.of(proposalDto));
+	public byte[] getProposalsAsCsvData(String code, String employeeName, Integer bankCode, String dateField,
+			LocalDate beginDate, LocalDate endDate) {
+		Page<ProposalDataDTO> result = getProposals(code, employeeName, bankCode, dateField, beginDate, endDate, Pageable.unpaged());
+		List<ProposalDataDTO> proposalDtoList = result.getContent();
+		ByteArrayOutputStream inMemoryOutput = new ByteArrayOutputStream();
+		PrintWriter writer = new PrintWriter(inMemoryOutput);
+		writer.println("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente");
+		for(ProposalDataDTO proposalDto : proposalDtoList) {
+			String payment = proposalDto.getPayment() != null ? proposalDto.getPayment().toString() : "null";
+			writer.println(String.join(";",
+					proposalDto.getId().toString(),
+					proposalDto.getCode(),
+					proposalDto.getValue().toString(),
+					proposalDto.getGeneration().toString(),
+					payment,
+					proposalDto.getStatus().toString(),
+					proposalDto.getEmployeeName(),
+					proposalDto.getBankName(),
+					proposalDto.getCustomerCpf(),
+					proposalDto.getCustomerName()));
 		}
-		return Page.empty();
+		writer.flush();
+		writer.close();
+		return inMemoryOutput.toByteArray();
 	}
 
 	@Transactional
@@ -142,6 +161,15 @@ public class ProposalService {
 		if(beginDate.isAfter(endDate)) {
 			throw new IllegalParameterException(DATE_PARAMETERS);
 		}
+	}
+
+	private Page<ProposalDataDTO> getProposalByCode(String code) {
+		Optional<Proposal> result = proposalRepository.findByCode(code);
+		if(result.isPresent()) {
+			ProposalDataDTO proposalDto = ProposalMapper.toProposalDataDto(result.get());
+			return new PageImpl<>(List.of(proposalDto));
+		}
+		return Page.empty();
 	}
 
 	private void setEmployeeAndCustomerAndBank(ProposalCreateDTO proposalDto, Proposal proposal) {

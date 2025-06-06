@@ -1,5 +1,7 @@
 package com.corbanmultibancos.business.services;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +53,25 @@ public class CustomerService {
 			customerPage = customerRepository.findAll(pageable);
 		}
 		return customerPage.map(customer -> CustomerMapper.toDto(customer));
+	}
+	
+	public byte[] getCustomersAsCsvData(String cpf, String name, String phone) {
+		Page<CustomerDTO> page = getCustomers(cpf, name, phone, Pageable.unpaged());
+		List<CustomerDTO> customerDtoList = page.getContent();
+		ByteArrayOutputStream inMemoryOutput = new ByteArrayOutputStream();
+		PrintWriter writer = new PrintWriter(inMemoryOutput);
+		writer.println("ID;CPF;Nome;Telefone;Nascimento");
+		for(CustomerDTO customerDto : customerDtoList) {
+			writer.println(String.join(";", 
+					customerDto.getId().toString(),
+					customerDto.getCpf(),
+					customerDto.getName(),
+					customerDto.getPhone(),
+					customerDto.getBirthDate().toString()));
+		}
+		writer.flush();
+		writer.flush();
+		return inMemoryOutput.toByteArray();
 	}
 
 	@Transactional

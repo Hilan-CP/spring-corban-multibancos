@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -140,5 +141,18 @@ public class TeamServiceTests {
 	public void deleteTeamShouldThrowDataIntegrityExceptionWhenDependentId() {
 		Assertions.assertThrows(DataIntegrityException.class, () -> teamService.deleteTeam(dependentId));
 		Mockito.verify(teamRepository, never()).deleteById(any());
+	}
+
+	@Test
+	public void getTeamsAsCsvShouldReturnByteArray() {
+		List<TeamDTO> teamDtoList = List.of(TeamMapper.toDto(teamEntity));
+		TeamService serviceSpy = Mockito.spy(teamService);
+		Mockito.doReturn(teamDtoList).when(serviceSpy).getTeams("");
+		byte[] csvData = serviceSpy.getTeamsAsCsvData("");
+		String content = new String(csvData, StandardCharsets.UTF_8);
+		Assertions.assertNotNull(csvData);
+		Assertions.assertTrue(content.contains("ID;Nome"));
+		Assertions.assertTrue(content.contains(teamDtoList.get(0).getId().toString()));
+		Assertions.assertTrue(content.contains(teamDtoList.get(0).getName()));
 	}
 }

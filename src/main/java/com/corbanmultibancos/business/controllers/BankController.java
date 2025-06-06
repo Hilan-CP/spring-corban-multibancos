@@ -4,6 +4,9 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +41,14 @@ public class BankController {
 												@RequestParam(defaultValue = "") String name) {
 		List<BankDTO> bankDtoList = bankService.getBanks(code, name);
 		return ResponseEntity.ok(bankDtoList);
+	}
+
+	@GetMapping("/csv")
+	public ResponseEntity<Resource> getBanksAsCsv(@RequestParam(defaultValue = "0") Integer code,
+												@RequestParam(defaultValue = "") String name){
+		byte[] csvData = bankService.getBanksAsCsvData(code, name);
+		Resource resource = new ByteArrayResource(csvData);
+		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=banks.csv").body(resource);
 	}
 
 	@PostMapping

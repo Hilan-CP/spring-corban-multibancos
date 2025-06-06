@@ -4,8 +4,11 @@ import java.net.URI;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,6 +51,18 @@ public class ProposalController {
 			Pageable pageable){
 		Page<ProposalDataDTO> page = proposalService.getProposals(code, employeeName, bankCode, dateField, beginDate, endDate, pageable);
 		return ResponseEntity.ok(page);
+	}
+
+	@GetMapping("/csv")
+	public ResponseEntity<Resource> getProposalsAsCsv(@RequestParam(defaultValue = "") String code,
+			@RequestParam(defaultValue = "") String employeeName,
+			@RequestParam(defaultValue = "") Integer bankCode,
+			@RequestParam(required = true) String dateField,
+			@RequestParam(required = true) LocalDate beginDate,
+			@RequestParam(required = true) LocalDate endDate){
+		byte[] csvData = proposalService.getProposalsAsCsvData(code, employeeName, bankCode, dateField, beginDate, endDate);
+		Resource resource = new ByteArrayResource(csvData);
+		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=proposals.csv").body(resource);
 	}
 
 	@PostMapping

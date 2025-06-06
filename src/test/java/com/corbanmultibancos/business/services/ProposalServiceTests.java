@@ -3,6 +3,7 @@ package com.corbanmultibancos.business.services;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -100,12 +101,12 @@ public class ProposalServiceTests {
 		Mockito.when(proposalRepository.findByCode(existingCode)).thenReturn(Optional.of(proposalEntity));
 		Mockito.when(proposalRepository.findByCode(nonExistingCode)).thenReturn(Optional.empty());
 		Mockito.when(proposalRepository.findBy(anyMap(), any(Pageable.class))).thenReturn(proposalDtoPage);
-		Mockito.when(bankRepository.getReferenceById(existingId)).thenReturn(bank);
-		Mockito.when(bankRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(employeeRepository.getReferenceById(existingId)).thenReturn(employee);
-		Mockito.when(employeeRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(customerRepository.getReferenceById(existingId)).thenReturn(customer);
-		Mockito.when(customerRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
+		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
+		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
+		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
+		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 	}
 
 	@Test
@@ -215,5 +216,25 @@ public class ProposalServiceTests {
 	public void updateProposalShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> proposalService.updateProposal(nonExistingId, proposalCreateDto));
+	}
+
+	@Test
+	public void getProposalsAsCsvDataShouldReturnByteArray() {
+		Page<ProposalDataDTO> page = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
+		ProposalService serviceSpy = Mockito.spy(proposalService);
+		Mockito.doReturn(page).when(serviceSpy).getProposals("", "", 0, dateFieldName, beginDate, endDate, Pageable.unpaged());
+		byte[] csvData = serviceSpy.getProposalsAsCsvData("", "", 0, dateFieldName, beginDate, endDate);
+		String content = new String(csvData, StandardCharsets.UTF_8);
+		Assertions.assertNotNull(csvData);
+		Assertions.assertTrue(content.contains("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente"));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getId().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getCode()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getValue().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getGeneration().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getStatus().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getEmployeeName()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getBankName()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getCustomerCpf()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getCustomerName()));
 	}
 }

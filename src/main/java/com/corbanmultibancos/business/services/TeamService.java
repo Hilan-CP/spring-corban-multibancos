@@ -1,5 +1,7 @@
 package com.corbanmultibancos.business.services;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +47,21 @@ public class TeamService {
 			teamList = teamRepository.findAll();
 		}
 		return teamList.stream().map(team -> TeamMapper.toDto(team)).toList();
+	}
+
+	public byte[] getTeamsAsCsvData(String name) {
+		List<TeamDTO> teamDtoList = getTeams(name);
+		ByteArrayOutputStream inMemoryOutput = new ByteArrayOutputStream();
+		PrintWriter writer = new PrintWriter(inMemoryOutput);
+		writer.println("ID;Nome");
+		for(TeamDTO teamDto : teamDtoList) {
+			writer.println(String.join(";",
+					teamDto.getId().toString(),
+					teamDto.getName()));
+		}
+		writer.flush();
+		writer.close();
+		return inMemoryOutput.toByteArray();
 	}
 
 	@Transactional

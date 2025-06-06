@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -173,5 +174,21 @@ public class CustomerServiceTests {
 	public void updateCustomerShouldReturnEntityNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> customerService.updateCustomer(nonExistingId, CustomerMapper.toDto(customerEntity)));
+	}
+
+	@Test
+	public void getCustomersAsCsvDataShouldReturnByteArray() {
+		Page<CustomerDTO> page = new PageImpl<>(List.of(CustomerMapper.toDto(customerEntity)));
+		CustomerService serviceSpy = Mockito.spy(customerService);
+		Mockito.doReturn(page).when(serviceSpy).getCustomers("", "", "", Pageable.unpaged());
+		byte[] csvData = serviceSpy.getCustomersAsCsvData("", "", "");
+		String content = new String(csvData, StandardCharsets.UTF_8);
+		Assertions.assertNotNull(csvData);
+		Assertions.assertTrue(content.contains("ID;CPF;Nome;Telefone;Nascimento"));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getId().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getCpf()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getName()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getPhone()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getBirthDate().toString()));
 	}
 }

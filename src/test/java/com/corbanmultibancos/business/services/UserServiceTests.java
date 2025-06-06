@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Role;
 import com.corbanmultibancos.business.entities.User;
+import com.corbanmultibancos.business.mappers.UserMapper;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.RoleRepository;
 import com.corbanmultibancos.business.repositories.UserRepository;
@@ -166,5 +168,20 @@ public class UserServiceTests {
 	public void deleteUserShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(nonExistingId));
 		Mockito.verify(userRepository, never()).deleteById(any());
+	}
+
+	@Test
+	public void getUserAsCsvDataShouldReturnByteArray() {
+		Page<UserDataDTO> page = new PageImpl<>(List.of(UserMapper.toUserDataDto(userEntity)));
+		UserService serviceSpy = Mockito.spy(userService);
+		Mockito.doReturn(page).when(serviceSpy).getUsers("", Pageable.unpaged());
+		byte[] csvData = serviceSpy.getUsersAsCsvData("");
+		String content = new String(csvData, StandardCharsets.UTF_8);
+		Assertions.assertNotNull(csvData);
+		Assertions.assertTrue(content.contains("ID_Funcionário;Usuário;ID_Tipo;Tipo_Usuário"));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getEmployeeId().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getUsername()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getRole().getId().toString()));
+		Assertions.assertTrue(content.contains(page.getContent().get(0).getRole().getAuthority()));
 	}
 }
