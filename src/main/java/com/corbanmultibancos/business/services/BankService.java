@@ -23,6 +23,9 @@ public class BankService {
 
 	@Autowired
 	private BankRepository bankRepository;
+	
+	@Autowired
+	private BankCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public BankDTO getBankById(Long id) {
@@ -35,16 +38,19 @@ public class BankService {
 	public List<BankDTO> getBanks(Integer code, String name) {
 		validateParameters(code, name);
 		List<Bank> bankList;
-		if(code != 0) {
+		if (code != 0) {
 			bankList = getBankByCode(code);
-		}
-		else if(!name.isBlank()) {
+		} else if (!name.isBlank()) {
 			bankList = bankRepository.findByName(name);
-		}
-		else {
+		} else {
 			bankList = bankRepository.findAll();
 		}
 		return bankList.stream().map(bank -> BankMapper.toDto(bank)).toList();
+	}
+
+	public byte[] getBanksAsCsvData(Integer code, String name) {
+		List<BankDTO> bankDtoList = getBanks(code, name);
+		return exporterService.writeBanksAsBytes(bankDtoList);
 	}
 
 	@Transactional
@@ -62,21 +68,20 @@ public class BankService {
 			BankMapper.copyDtoToEntity(bankDto, bank);
 			bank = bankRepository.save(bank);
 			return BankMapper.toDto(bank);
-		}
-		catch (EntityNotFoundException e) {
+		} catch (EntityNotFoundException e) {
 			throw new ResourceNotFoundException(BANK_NOT_FOUND);
 		}
 	}
 
 	private void validateParameters(Integer code, String name) {
-		if(code != 0 && !name.isBlank()) {
+		if (code != 0 && !name.isBlank()) {
 			throw new IllegalParameterException(MULTIPLE_PARAMS);
 		}
 	}
 
-	private List<Bank> getBankByCode(Integer code){
+	private List<Bank> getBankByCode(Integer code) {
 		Optional<Bank> result = bankRepository.findByCode(code);
-		if(result.isPresent()) {
+		if (result.isPresent()) {
 			return List.of(result.get());
 		}
 		return List.of();

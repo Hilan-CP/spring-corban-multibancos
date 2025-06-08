@@ -47,6 +47,9 @@ public class ProposalService {
 
 	@Autowired
 	private BankRepository bankRepository;
+	
+	@Autowired
+	private ProposalCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public ProposalDataDTO getProposalById(Long id) {
@@ -79,13 +82,10 @@ public class ProposalService {
 		return page;
 	}
 
-	private Page<ProposalDataDTO> getProposalByCode(String code) {
-		Optional<Proposal> result = proposalRepository.findByCode(code);
-		if(result.isPresent()) {
-			ProposalDataDTO proposalDto = ProposalMapper.toProposalDataDto(result.get());
-			return new PageImpl<>(List.of(proposalDto));
-		}
-		return Page.empty();
+	public byte[] getProposalsAsCsvData(String code, String employeeName, Integer bankCode, String dateField,
+			LocalDate beginDate, LocalDate endDate) {
+		Page<ProposalDataDTO> result = getProposals(code, employeeName, bankCode, dateField, beginDate, endDate, Pageable.unpaged());
+		return exporterService.writeProposalsAsBytes(result.getContent());
 	}
 
 	@Transactional
@@ -142,6 +142,15 @@ public class ProposalService {
 		if(beginDate.isAfter(endDate)) {
 			throw new IllegalParameterException(DATE_PARAMETERS);
 		}
+	}
+
+	private Page<ProposalDataDTO> getProposalByCode(String code) {
+		Optional<Proposal> result = proposalRepository.findByCode(code);
+		if(result.isPresent()) {
+			ProposalDataDTO proposalDto = ProposalMapper.toProposalDataDto(result.get());
+			return new PageImpl<>(List.of(proposalDto));
+		}
+		return Page.empty();
 	}
 
 	private void setEmployeeAndCustomerAndBank(ProposalCreateDTO proposalDto, Proposal proposal) {

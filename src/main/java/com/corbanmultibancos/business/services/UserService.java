@@ -37,6 +37,9 @@ public class UserService {
 
 	@Autowired
 	private RoleRepository roleRepository;
+	
+	@Autowired
+	private UserCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public UserDataDTO getUserById(Long id) {
@@ -55,6 +58,11 @@ public class UserService {
 			userPage = userRepository.findAll(pageable);
 		}
 		return userPage.map(user -> UserMapper.toUserDataDto(user));
+	}
+
+	public byte[] getUsersAsCsvData(String username) {
+		Page<UserDataDTO> result = getUsers(username, Pageable.unpaged());
+		return exporterService.writeUsersAsBytes(result.getContent());
 	}
 
 	@Transactional

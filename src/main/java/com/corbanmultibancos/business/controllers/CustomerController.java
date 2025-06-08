@@ -3,8 +3,11 @@ package com.corbanmultibancos.business.controllers;
 import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +44,18 @@ public class CustomerController {
 											Pageable pageable) {
 		Page<CustomerDTO> page = customerService.getCustomers(cpf, name, phone, pageable);
 		return ResponseEntity.ok(page);
+	}
+	
+	@GetMapping("/csv")
+	public ResponseEntity<Resource> getCustomersAsCsv(@RequestParam(defaultValue = "") String cpf,
+			@RequestParam(defaultValue = "") String name,
+			@RequestParam(defaultValue = "") String phone){
+		byte[] csvData = customerService.getCustomersAsCsvData(cpf, name, phone);
+		Resource resource = new ByteArrayResource(csvData);
+		return ResponseEntity.ok()
+				.header("Content-Disposition", "attachment;filename=customers.csv")
+				.contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+				.body(resource);
 	}
 
 	@PostMapping

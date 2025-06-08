@@ -1,8 +1,12 @@
 package com.corbanmultibancos.business.controllers;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -385,5 +390,16 @@ public class ProposalControllerIntegrationTests {
 				.content(proposalJson)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
+	}
+
+	@Test
+	public void getProposalsAsCsvShouldReturnResource() throws Exception {
+		mockMvc.perform(get("/proposals/csv?dateField={field}&beginDate={begin}&endDate={end}",
+				dateField, beginDate, endDate))
+			.andExpect(status().isOk())
+			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
+			.andExpect(content().contentType("text/csv;charset=UTF-8"))
+			.andExpect(content().string(containsString("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente")))
+			.andDo(print());
 	}
 }

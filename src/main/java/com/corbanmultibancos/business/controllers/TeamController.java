@@ -4,6 +4,9 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +41,16 @@ public class TeamController {
 	public ResponseEntity<List<TeamDTO>> getTeams(@RequestParam(defaultValue = "") String name) {
 		List<TeamDTO> teamDtoList = teamService.getTeams(name);
 		return ResponseEntity.ok(teamDtoList);
+	}
+
+	@GetMapping("/csv")
+	public ResponseEntity<Resource> getTeamsAsCsv(@RequestParam(defaultValue = "") String name){
+		byte[] csvData = teamService.getTeamsAsCsvData(name);
+		Resource resource = new ByteArrayResource(csvData);
+		return ResponseEntity.ok()
+				.header("Content-Disposition", "attachment;filename=teams.csv")
+				.contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+				.body(resource);
 	}
 
 	@PostMapping

@@ -27,6 +27,9 @@ public class EmployeeService {
 
 	@Autowired
 	private EmployeeRepository employeeRepository;
+	
+	@Autowired
+	private EmployeeCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public EmployeeUserDTO getEmployeeById(Long id) {
@@ -49,6 +52,11 @@ public class EmployeeService {
 			page = employeeRepository.findAll(pageable);
 		}
 		return page.map(employee -> EmployeeMapper.toEmployeeUserDTO(employee));
+	}
+
+	public byte[] getEmployeesAsCsvData(String cpf, String name) {
+		Page<EmployeeUserDTO> result = getEmployees(cpf, name, Pageable.unpaged());
+		return exporterService.writeEmployeeAsBytes(result.getContent());
 	}
 
 	@Transactional

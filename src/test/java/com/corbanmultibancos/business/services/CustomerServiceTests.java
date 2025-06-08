@@ -1,6 +1,7 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -38,6 +39,9 @@ public class CustomerServiceTests {
 
 	@Mock
 	private CustomerRepository customerRepository;
+	
+	@Mock
+	private CustomerCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -173,5 +177,16 @@ public class CustomerServiceTests {
 	public void updateCustomerShouldReturnEntityNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> customerService.updateCustomer(nonExistingId, CustomerMapper.toDto(customerEntity)));
+	}
+
+	@Test
+	public void getCustomersAsCsvDataShouldReturnByteArray() {
+		Page<CustomerDTO> page = new PageImpl<>(List.of(CustomerMapper.toDto(customerEntity)));
+		String data = String.join("\n", "ID;CPF;Nome;Telefone;Nascimento", "1;00066098645;Sergio;11930587328;1969-08-13");
+		CustomerService serviceSpy = Mockito.spy(customerService);
+		Mockito.doReturn(page).when(serviceSpy).getCustomers("", "", "", Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeCustomerAsBytes(anyList());
+		byte[] csvData = serviceSpy.getCustomersAsCsvData("", "", "");
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

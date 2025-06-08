@@ -26,6 +26,9 @@ public class CustomerService {
 
 	@Autowired
 	private CustomerRepository customerRepository;
+	
+	@Autowired
+	private CustomerCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public CustomerDTO getCustomerById(Long id) {
@@ -51,6 +54,11 @@ public class CustomerService {
 			customerPage = customerRepository.findAll(pageable);
 		}
 		return customerPage.map(customer -> CustomerMapper.toDto(customer));
+	}
+
+	public byte[] getCustomersAsCsvData(String cpf, String name, String phone) {
+		Page<CustomerDTO> page = getCustomers(cpf, name, phone, Pageable.unpaged());
+		return exporterService.writeCustomerAsBytes(page.getContent());
 	}
 
 	@Transactional

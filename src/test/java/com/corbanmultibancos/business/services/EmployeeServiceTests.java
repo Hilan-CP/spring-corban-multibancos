@@ -1,6 +1,7 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -38,6 +39,9 @@ public class EmployeeServiceTests {
 
 	@Mock
 	private EmployeeRepository employeeRepository;
+
+	@Mock
+	private EmployeeCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -140,5 +144,17 @@ public class EmployeeServiceTests {
 	public void updateEmployeeShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> employeeService.updateEmployee(nonExistingId, employeeCreationDto));
+	}
+
+	@Test
+	public void getEmployeesAsCsvDataShouldReturnByteArray() {
+		Page<EmployeeUserDTO> page = new PageImpl<>(List.of(EmployeeMapper.toEmployeeUserDTO(employeeEntity)));
+		String data = String.join(";", "ID;CPF;Nome;Usuário;Tipo_Usuário;ID_Equipe;Nome_Equipe",
+				"1;10975759000;Florinda Flores;;");
+		EmployeeService serviceSpy = Mockito.spy(employeeService);
+		Mockito.doReturn(page).when(serviceSpy).getEmployees("", "", Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeEmployeeAsBytes(anyList());
+		byte[] csvData = serviceSpy.getEmployeesAsCsvData("", "");
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

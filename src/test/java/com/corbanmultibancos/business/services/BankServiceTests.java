@@ -1,6 +1,7 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -18,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.corbanmultibancos.business.dto.BankDTO;
 import com.corbanmultibancos.business.entities.Bank;
+import com.corbanmultibancos.business.mappers.BankMapper;
 import com.corbanmultibancos.business.repositories.BankRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
@@ -32,6 +34,9 @@ public class BankServiceTests {
 
 	@Mock
 	private BankRepository bankRepository;
+	
+	@Mock
+	private BankCsvExporterService bankCsvExporter;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -141,5 +146,16 @@ public class BankServiceTests {
 	public void updateBankShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> bankService.updateBank(nonExistingId, new BankDTO()));
+	}
+
+	@Test
+	public void getBanksAsCsvDataShouldReturnByteArray() {
+		List<BankDTO> bankDtoList = List.of(BankMapper.toDto(bankEntity));
+		String data = String.join("\n", "ID;Código;Nome","1;623;PAN");
+		BankService serviceSpy = Mockito.spy(bankService);
+		Mockito.doReturn(bankDtoList).when(serviceSpy).getBanks(0, "");
+		Mockito.doReturn(data.getBytes()).when(bankCsvExporter).writeBanksAsBytes(anyList());
+		byte[] csvData = serviceSpy.getBanksAsCsvData(0, "");
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

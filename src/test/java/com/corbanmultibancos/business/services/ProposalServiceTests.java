@@ -1,6 +1,7 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 
 import java.time.LocalDate;
@@ -54,6 +55,9 @@ public class ProposalServiceTests {
 
 	@Mock
 	private BankRepository bankRepository;
+	
+	@Mock
+	private ProposalCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -81,8 +85,8 @@ public class ProposalServiceTests {
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateFieldName = "generation";
-		beginDate = LocalDate.now();
-		endDate = LocalDate.now();
+		beginDate = LocalDate.of(2025, 6, 1);
+		endDate = LocalDate.of(2025, 6, 1);
 		employee = new Employee(existingId, "67661033020", "Jose", null, null);
 		bank = new Bank(existingId, bankCode, "PAN");
 		customer = new Customer(existingId, "00066098645", "Sergio", "44987654321", LocalDate.now());
@@ -100,12 +104,12 @@ public class ProposalServiceTests {
 		Mockito.when(proposalRepository.findByCode(existingCode)).thenReturn(Optional.of(proposalEntity));
 		Mockito.when(proposalRepository.findByCode(nonExistingCode)).thenReturn(Optional.empty());
 		Mockito.when(proposalRepository.findBy(anyMap(), any(Pageable.class))).thenReturn(proposalDtoPage);
-		Mockito.when(bankRepository.getReferenceById(existingId)).thenReturn(bank);
-		Mockito.when(bankRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(employeeRepository.getReferenceById(existingId)).thenReturn(employee);
-		Mockito.when(employeeRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(customerRepository.getReferenceById(existingId)).thenReturn(customer);
-		Mockito.when(customerRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
+		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
+		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
+		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
+		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 	}
 
 	@Test
@@ -215,5 +219,17 @@ public class ProposalServiceTests {
 	public void updateProposalShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> proposalService.updateProposal(nonExistingId, proposalCreateDto));
+	}
+
+	@Test
+	public void getProposalsAsCsvDataShouldReturnByteArray() {
+		Page<ProposalDataDTO> page = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
+		String data = String.join("\n", "ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente",
+				"1;993;1000.0;2025-06-01;2025-06-01;CONTRATADA;Jose;PAN;00066098645;Sergio");
+		ProposalService serviceSpy = Mockito.spy(proposalService);
+		Mockito.doReturn(page).when(serviceSpy).getProposals("", "", 0, dateFieldName, beginDate, endDate, Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeProposalsAsBytes(anyList());
+		byte[] csvData = serviceSpy.getProposalsAsCsvData("", "", 0, dateFieldName, beginDate, endDate);
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

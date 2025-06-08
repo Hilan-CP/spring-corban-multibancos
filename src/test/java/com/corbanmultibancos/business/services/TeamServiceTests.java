@@ -37,6 +37,9 @@ public class TeamServiceTests {
 
 	@Mock
 	private EmployeeRepository employeeRepository;
+	
+	@Mock
+	private TeamCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -140,5 +143,16 @@ public class TeamServiceTests {
 	public void deleteTeamShouldThrowDataIntegrityExceptionWhenDependentId() {
 		Assertions.assertThrows(DataIntegrityException.class, () -> teamService.deleteTeam(dependentId));
 		Mockito.verify(teamRepository, never()).deleteById(any());
+	}
+
+	@Test
+	public void getTeamsAsCsvShouldReturnByteArray() {
+		List<TeamDTO> teamDtoList = List.of(TeamMapper.toDto(teamEntity));
+		String data = String.join("\n", "ID;Nome", "1;Junior");
+		TeamService serviceSpy = Mockito.spy(teamService);
+		Mockito.doReturn(teamDtoList).when(serviceSpy).getTeams("");
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeTeamsAsBytes(teamDtoList);
+		byte[] csvData = serviceSpy.getTeamsAsCsvData("");
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

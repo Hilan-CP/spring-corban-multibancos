@@ -27,6 +27,9 @@ public class TeamService {
 
 	@Autowired
 	private EmployeeRepository employeeRepository;
+	
+	@Autowired
+	private TeamCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public TeamDTO getTeamById(Long id) {
@@ -45,6 +48,11 @@ public class TeamService {
 			teamList = teamRepository.findAll();
 		}
 		return teamList.stream().map(team -> TeamMapper.toDto(team)).toList();
+	}
+
+	public byte[] getTeamsAsCsvData(String name) {
+		List<TeamDTO> teamDtoList = getTeams(name);
+		return exporterService.writeTeamsAsBytes(teamDtoList);
 	}
 
 	@Transactional
