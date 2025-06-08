@@ -1,9 +1,12 @@
 package com.corbanmultibancos.business.controllers;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -225,5 +229,14 @@ public class UserControllerIntegrationTests {
 		mockMvc.perform(delete("/users/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	public void getUsersAsCsvShouldReturnResource() throws Exception {
+		mockMvc.perform(get("/users/csv"))
+			.andExpect(status().isOk())
+			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
+			.andExpect(content().contentType("text/csv;charset=UTF-8"))
+			.andExpect(content().string(containsString("")));
 	}
 }

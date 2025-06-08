@@ -4,7 +4,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +37,9 @@ public class TeamServiceTests {
 
 	@Mock
 	private EmployeeRepository employeeRepository;
+	
+	@Mock
+	private TeamCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -146,13 +148,11 @@ public class TeamServiceTests {
 	@Test
 	public void getTeamsAsCsvShouldReturnByteArray() {
 		List<TeamDTO> teamDtoList = List.of(TeamMapper.toDto(teamEntity));
+		String data = String.join("\n", "ID;Nome", "1;Junior");
 		TeamService serviceSpy = Mockito.spy(teamService);
 		Mockito.doReturn(teamDtoList).when(serviceSpy).getTeams("");
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeTeamsAsBytes(teamDtoList);
 		byte[] csvData = serviceSpy.getTeamsAsCsvData("");
-		String content = new String(csvData, StandardCharsets.UTF_8);
-		Assertions.assertNotNull(csvData);
-		Assertions.assertTrue(content.contains("ID;Nome"));
-		Assertions.assertTrue(content.contains(teamDtoList.get(0).getId().toString()));
-		Assertions.assertTrue(content.contains(teamDtoList.get(0).getName()));
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

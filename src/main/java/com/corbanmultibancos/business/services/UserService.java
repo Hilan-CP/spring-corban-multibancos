@@ -1,7 +1,5 @@
 package com.corbanmultibancos.business.services;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +37,9 @@ public class UserService {
 
 	@Autowired
 	private RoleRepository roleRepository;
+	
+	@Autowired
+	private UserCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public UserDataDTO getUserById(Long id) {
@@ -61,20 +62,7 @@ public class UserService {
 
 	public byte[] getUsersAsCsvData(String username) {
 		Page<UserDataDTO> result = getUsers(username, Pageable.unpaged());
-		List<UserDataDTO> userDtoList = result.getContent();
-		ByteArrayOutputStream inMemoryOutput = new ByteArrayOutputStream();
-		PrintWriter writer = new PrintWriter(inMemoryOutput);
-		writer.println("ID_Funcionário;Usuário;ID_Tipo;Tipo_Usuário");
-		for(UserDataDTO userDto : userDtoList) {
-			writer.println(String.join(";",
-					userDto.getEmployeeId().toString(),
-					userDto.getUsername(),
-					userDto.getRole().getId().toString(),
-					userDto.getRole().getAuthority()));
-		}
-		writer.flush();
-		writer.close();
-		return inMemoryOutput.toByteArray();
+		return exporterService.writeUsersAsBytes(result.getContent());
 	}
 
 	@Transactional

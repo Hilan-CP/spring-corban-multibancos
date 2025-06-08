@@ -1,9 +1,9 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +55,9 @@ public class ProposalServiceTests {
 
 	@Mock
 	private BankRepository bankRepository;
+	
+	@Mock
+	private ProposalCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -82,8 +85,8 @@ public class ProposalServiceTests {
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateFieldName = "generation";
-		beginDate = LocalDate.now();
-		endDate = LocalDate.now();
+		beginDate = LocalDate.of(2025, 6, 1);
+		endDate = LocalDate.of(2025, 6, 1);
 		employee = new Employee(existingId, "67661033020", "Jose", null, null);
 		bank = new Bank(existingId, bankCode, "PAN");
 		customer = new Customer(existingId, "00066098645", "Sergio", "44987654321", LocalDate.now());
@@ -221,20 +224,12 @@ public class ProposalServiceTests {
 	@Test
 	public void getProposalsAsCsvDataShouldReturnByteArray() {
 		Page<ProposalDataDTO> page = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
+		String data = String.join("\n", "ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente",
+				"1;993;1000.0;2025-06-01;2025-06-01;CONTRATADA;Jose;PAN;00066098645;Sergio");
 		ProposalService serviceSpy = Mockito.spy(proposalService);
 		Mockito.doReturn(page).when(serviceSpy).getProposals("", "", 0, dateFieldName, beginDate, endDate, Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeProposalsAsBytes(anyList());
 		byte[] csvData = serviceSpy.getProposalsAsCsvData("", "", 0, dateFieldName, beginDate, endDate);
-		String content = new String(csvData, StandardCharsets.UTF_8);
-		Assertions.assertNotNull(csvData);
-		Assertions.assertTrue(content.contains("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente"));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getId().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getCode()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getValue().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getGeneration().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getStatus().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getEmployeeName()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getBankName()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getCustomerCpf()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getCustomerName()));
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

@@ -1,10 +1,10 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +39,9 @@ public class EmployeeServiceTests {
 
 	@Mock
 	private EmployeeRepository employeeRepository;
+
+	@Mock
+	private EmployeeCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -146,14 +149,12 @@ public class EmployeeServiceTests {
 	@Test
 	public void getEmployeesAsCsvDataShouldReturnByteArray() {
 		Page<EmployeeUserDTO> page = new PageImpl<>(List.of(EmployeeMapper.toEmployeeUserDTO(employeeEntity)));
+		String data = String.join(";", "ID;CPF;Nome;Usuário;Tipo_Usuário;ID_Equipe;Nome_Equipe",
+				"1;10975759000;Florinda Flores;;");
 		EmployeeService serviceSpy = Mockito.spy(employeeService);
 		Mockito.doReturn(page).when(serviceSpy).getEmployees("", "", Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeEmployeeAsBytes(anyList());
 		byte[] csvData = serviceSpy.getEmployeesAsCsvData("", "");
-		String content = new String(csvData, StandardCharsets.UTF_8);
-		Assertions.assertNotNull(csvData);
-		Assertions.assertTrue(content.contains("ID;CPF;Nome;Usuário;Tipo_Usuário;ID_Equipe;Nome_Equipe"));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getId().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getCpf()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getName()));
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

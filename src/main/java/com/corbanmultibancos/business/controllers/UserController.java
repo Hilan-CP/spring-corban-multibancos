@@ -7,7 +7,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,7 +51,10 @@ public class UserController {
 	public ResponseEntity<Resource> getUsersAsCsv(@RequestParam(defaultValue = "") String username){
 		byte[] csvData = userService.getUsersAsCsvData(username);
 		Resource resource = new ByteArrayResource(csvData);
-		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=users.csv").body(resource);
+		return ResponseEntity.ok()
+				.header("Content-Disposition", "attachment;filename=users.csv")
+				.contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+				.body(resource);
 	}
 
 	@PostMapping

@@ -1,10 +1,10 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +34,9 @@ public class BankServiceTests {
 
 	@Mock
 	private BankRepository bankRepository;
+	
+	@Mock
+	private BankCsvExporterService bankCsvExporter;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -148,14 +151,11 @@ public class BankServiceTests {
 	@Test
 	public void getBanksAsCsvDataShouldReturnByteArray() {
 		List<BankDTO> bankDtoList = List.of(BankMapper.toDto(bankEntity));
+		String data = String.join("\n", "ID;Código;Nome","1;623;PAN");
 		BankService serviceSpy = Mockito.spy(bankService);
 		Mockito.doReturn(bankDtoList).when(serviceSpy).getBanks(0, "");
+		Mockito.doReturn(data.getBytes()).when(bankCsvExporter).writeBanksAsBytes(anyList());
 		byte[] csvData = serviceSpy.getBanksAsCsvData(0, "");
-		String content = new String(csvData, StandardCharsets.UTF_8);
-		Assertions.assertNotNull(csvData);
-		Assertions.assertTrue(content.contains("ID;Código;Nome"));
-		Assertions.assertTrue(content.contains(bankDtoList.get(0).getId().toString()));
-		Assertions.assertTrue(content.contains(bankDtoList.get(0).getCode().toString()));
-		Assertions.assertTrue(content.contains(bankDtoList.get(0).getName()));
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

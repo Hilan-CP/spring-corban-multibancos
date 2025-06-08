@@ -1,10 +1,10 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +39,9 @@ public class CustomerServiceTests {
 
 	@Mock
 	private CustomerRepository customerRepository;
+	
+	@Mock
+	private CustomerCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -179,16 +182,11 @@ public class CustomerServiceTests {
 	@Test
 	public void getCustomersAsCsvDataShouldReturnByteArray() {
 		Page<CustomerDTO> page = new PageImpl<>(List.of(CustomerMapper.toDto(customerEntity)));
+		String data = String.join("\n", "ID;CPF;Nome;Telefone;Nascimento", "1;00066098645;Sergio;11930587328;1969-08-13");
 		CustomerService serviceSpy = Mockito.spy(customerService);
 		Mockito.doReturn(page).when(serviceSpy).getCustomers("", "", "", Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeCustomerAsBytes(anyList());
 		byte[] csvData = serviceSpy.getCustomersAsCsvData("", "", "");
-		String content = new String(csvData, StandardCharsets.UTF_8);
-		Assertions.assertNotNull(csvData);
-		Assertions.assertTrue(content.contains("ID;CPF;Nome;Telefone;Nascimento"));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getId().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getCpf()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getName()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getPhone()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getBirthDate().toString()));
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }

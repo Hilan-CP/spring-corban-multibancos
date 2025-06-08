@@ -1,7 +1,5 @@
 package com.corbanmultibancos.business.services;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +23,9 @@ public class BankService {
 
 	@Autowired
 	private BankRepository bankRepository;
+	
+	@Autowired
+	private BankCsvExporterService exporterService;
 
 	@Transactional(readOnly = true)
 	public BankDTO getBankById(Long id) {
@@ -49,15 +50,7 @@ public class BankService {
 
 	public byte[] getBanksAsCsvData(Integer code, String name) {
 		List<BankDTO> bankDtoList = getBanks(code, name);
-		ByteArrayOutputStream inMemoryOutput = new ByteArrayOutputStream();
-		PrintWriter writer = new PrintWriter(inMemoryOutput);
-		writer.println("ID;Código;Nome");
-		for (BankDTO bankDto : bankDtoList) {
-			writer.println(String.join(";", bankDto.getId().toString(), bankDto.getCode().toString(), bankDto.getName()));
-		}
-		writer.flush();
-		writer.close();
-		return inMemoryOutput.toByteArray();
+		return exporterService.writeBanksAsBytes(bankDtoList);
 	}
 
 	@Transactional

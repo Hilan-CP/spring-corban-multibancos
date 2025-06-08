@@ -1,10 +1,10 @@
 package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +49,9 @@ public class UserServiceTests {
 
 	@Mock
 	private RoleRepository roleRepository;
+	
+	@Mock
+	private UserCsvExporterService exporterService;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -173,15 +176,11 @@ public class UserServiceTests {
 	@Test
 	public void getUserAsCsvDataShouldReturnByteArray() {
 		Page<UserDataDTO> page = new PageImpl<>(List.of(UserMapper.toUserDataDto(userEntity)));
+		String data = String.join("\n", "ID_Funcionário;Usuário;ID_Tipo;Tipo_Usuário", "1;florinda;1;GESTOR");
 		UserService serviceSpy = Mockito.spy(userService);
 		Mockito.doReturn(page).when(serviceSpy).getUsers("", Pageable.unpaged());
+		Mockito.doReturn(data.getBytes()).when(exporterService).writeUsersAsBytes(anyList());
 		byte[] csvData = serviceSpy.getUsersAsCsvData("");
-		String content = new String(csvData, StandardCharsets.UTF_8);
-		Assertions.assertNotNull(csvData);
-		Assertions.assertTrue(content.contains("ID_Funcionário;Usuário;ID_Tipo;Tipo_Usuário"));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getEmployeeId().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getUsername()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getRole().getId().toString()));
-		Assertions.assertTrue(content.contains(page.getContent().get(0).getRole().getAuthority()));
+		Assertions.assertEquals(data, new String(csvData));
 	}
 }
