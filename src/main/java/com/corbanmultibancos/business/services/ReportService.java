@@ -44,7 +44,7 @@ public class ReportService {
 		ReportByEmployeeDTO employeeReport = new ReportByEmployeeDTO();
 		employeeReport.setEmployee(report.getEmployee());
 		employeeReport.setCount(report.getCount());
-		employeeReport.setSumGeneratedDay(report.getSumPaidDay().doubleValue());
+		employeeReport.setSumGeneratedDay(report.getSumGeneratedDay().doubleValue());
 		employeeReport.setSumPaidDay(report.getSumPaidDay().doubleValue());
 		employeeReport.setSumPaidMonth(report.getSumPaidMonth().doubleValue());
 		employeeReport.setMonthTrend(calculateTrend(employeeReport.getSumPaidMonth()));
@@ -75,8 +75,8 @@ public class ReportService {
 	}
 
 	private double calculateTrend(double value) {
-		int elapsedDays = today.getDayOfMonth() - 1;
+		int elapsedDays = today.getDayOfMonth();
 		int totalDays = today.lengthOfMonth();
-		return value / elapsedDays * totalDays;
+		return (value / elapsedDays) * totalDays;
 	}
 }
