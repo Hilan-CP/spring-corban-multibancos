@@ -80,4 +80,10 @@ public class ProposalController {
 		ProposalDataDTO proposalDataDto = proposalService.updateProposal(id, createDto);
 		return ResponseEntity.ok(proposalDataDto);
 	}
+
+	@PutMapping("/{id}/cancel")
+	public ResponseEntity<ProposalDataDTO> updateCancelProposal(@PathVariable Long id){
+		ProposalDataDTO proposalDataDto = proposalService.updateCancelProposal(id);
+		return ResponseEntity.ok(proposalDataDto);
+	}
 }

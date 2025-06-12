@@ -118,6 +118,20 @@ public class ProposalService {
 		}
 	}
 
+	@Transactional
+	public ProposalDataDTO updateCancelProposal(Long id) {
+		try {
+			Proposal proposal = proposalRepository.getReferenceById(id);
+			proposal.setStatus(ProposalStatus.CANCELADA);
+			proposal.setPayment(null);
+			proposal = proposalRepository.save(proposal);
+			return ProposalMapper.toProposalDataDto(proposal);
+		}
+		catch(EntityNotFoundException e) {
+			throw new ResourceNotFoundException(PROPOSAL_NOT_FOUND);
+		}
+	}
+
 	private void validateParameters(String code, String employeeName, Integer bankCode, String dateFieldName,
 			LocalDate beginDate, LocalDate endDate) {
 		int optionalParams = 0;
