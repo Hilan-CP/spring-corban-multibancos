@@ -23,7 +23,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.corbanmultibancos.business.dto.UserCreateDTO;
 import com.corbanmultibancos.business.dto.UserDataDTO;
-import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Role;
 import com.corbanmultibancos.business.entities.User;
@@ -65,7 +64,6 @@ public class UserServiceTests {
 	private Page<User> userPage;
 	private Pageable pageable;
 	private UserCreateDTO userCreateDto;
-	private UserUpdateDTO userUpdateDto;
 
 	@BeforeEach
 	void setUp() {
@@ -81,7 +79,6 @@ public class UserServiceTests {
 		userPage = new PageImpl<>(List.of(userEntity));
 		pageable = PageRequest.of(0, 10);
 		userCreateDto = new UserCreateDTO(9L, "novo", "novo123", 1L);
-		userUpdateDto = new UserUpdateDTO("outro_usuario", "4321", 1L);
 		Mockito.when(userRepository.findById(existingId)).thenReturn(Optional.of(userEntity));
 		Mockito.when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(userRepository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
@@ -151,14 +148,14 @@ public class UserServiceTests {
 
 	@Test
 	public void updateUserShouldReturnUserDTOWhenExistingId() {
-		UserDataDTO userDto = userService.updateUser(existingId, userUpdateDto);
+		UserDataDTO userDto = userService.updateUser(existingId, userCreateDto);
 		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
 
 	@Test
 	public void updateUserShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
 		Assertions.assertThrows(ResourceNotFoundException.class,
-				() -> userService.updateUser(nonExistingId, userUpdateDto));
+				() -> userService.updateUser(nonExistingId, userCreateDto));
 	}
 
 	@Test

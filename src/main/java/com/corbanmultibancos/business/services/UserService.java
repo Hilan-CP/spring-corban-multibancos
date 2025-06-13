@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corbanmultibancos.business.dto.UserCreateDTO;
 import com.corbanmultibancos.business.dto.UserDataDTO;
-import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Role;
 import com.corbanmultibancos.business.entities.User;
@@ -80,10 +79,10 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDataDTO updateUser(Long id, UserUpdateDTO userDto) {
+	public UserDataDTO updateUser(Long id, UserCreateDTO userDto) {
 		try {
 			User user = userRepository.getReferenceById(id);
-			UserMapper.copyUserUpdateDtoToEntity(userDto, user);
+			UserMapper.copyUserCreateDtoToEntity(userDto, user);
 			setEmployeeAndRole(user, id, userDto.getRoleId());
 			user = userRepository.save(user);
 			return UserMapper.toUserDataDto(user);
