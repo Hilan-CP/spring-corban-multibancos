@@ -1,19 +1,21 @@
 package com.corbanmultibancos.business.dto;
 
+import java.math.BigDecimal;
+
 public class ReportByEmployeeDTO {
 
 	private String employee;
 	private Long count;
-	private Double sumGeneratedDay;
-	private Double sumPaidDay;
-	private Double sumPaidMonth;
-	private Double monthTrend;
+	private BigDecimal sumGeneratedDay;
+	private BigDecimal sumPaidDay;
+	private BigDecimal sumPaidMonth;
+	private BigDecimal monthTrend;
 
 	public ReportByEmployeeDTO() {
 	}
 
-	public ReportByEmployeeDTO(String employee, Long count, Double sumGeneratedDay, Double sumPaidDay,
-			Double sumPaidMonth, Double monthTrend) {
+	public ReportByEmployeeDTO(String employee, Long count, BigDecimal sumGeneratedDay, BigDecimal sumPaidDay,
+			BigDecimal sumPaidMonth, BigDecimal monthTrend) {
 		this.employee = employee;
 		this.count = count;
 		this.sumGeneratedDay = sumGeneratedDay;
@@ -38,35 +40,35 @@ public class ReportByEmployeeDTO {
 		this.count = count;
 	}
 
-	public Double getSumGeneratedDay() {
+	public BigDecimal getSumGeneratedDay() {
 		return sumGeneratedDay;
 	}
 
-	public void setSumGeneratedDay(Double sumGeneratedDay) {
+	public void setSumGeneratedDay(BigDecimal sumGeneratedDay) {
 		this.sumGeneratedDay = sumGeneratedDay;
 	}
 
-	public Double getSumPaidDay() {
+	public BigDecimal getSumPaidDay() {
 		return sumPaidDay;
 	}
 
-	public void setSumPaidDay(Double sumPaidDay) {
+	public void setSumPaidDay(BigDecimal sumPaidDay) {
 		this.sumPaidDay = sumPaidDay;
 	}
 
-	public Double getSumPaidMonth() {
+	public BigDecimal getSumPaidMonth() {
 		return sumPaidMonth;
 	}
 
-	public void setSumPaidMonth(Double sumPaidMonth) {
+	public void setSumPaidMonth(BigDecimal sumPaidMonth) {
 		this.sumPaidMonth = sumPaidMonth;
 	}
 
-	public Double getMonthTrend() {
+	public BigDecimal getMonthTrend() {
 		return monthTrend;
 	}
 
-	public void setMonthTrend(Double monthTrend) {
+	public void setMonthTrend(BigDecimal monthTrend) {
 		this.monthTrend = monthTrend;
 	}
 }

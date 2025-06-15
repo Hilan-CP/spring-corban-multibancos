@@ -9,13 +9,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.corbanmultibancos.business.config.ClockConfig;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@Import(ClockConfig.class)
 public class ReportControllerIntegrationTests {
 
 	@Autowired
@@ -43,15 +47,14 @@ public class ReportControllerIntegrationTests {
 
 	@Test
 	public void getReportShouldReturnReportWhenNotEmptyTeamList() throws Exception {
-		
 		mockMvc.perform(get("/report?teamIds={teamIds}", teamIds)
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultByTeam").hasJsonPath())
-			.andExpect(jsonPath("$.totalCount").hasJsonPath())
-			.andExpect(jsonPath("$.totalSumGeneratedDay").hasJsonPath())
-			.andExpect(jsonPath("$.totalSumPaidDay").hasJsonPath())
-			.andExpect(jsonPath("$.totalSumPaidMonth").hasJsonPath())
-			.andExpect(jsonPath("$.totalMonthTrend").hasJsonPath());
+			.andExpect(jsonPath("$.resultByTeam").isNotEmpty())
+			.andExpect(jsonPath("$.totalCount").value(8))
+			.andExpect(jsonPath("$.totalSumGeneratedDay").value(303.59))
+			.andExpect(jsonPath("$.totalSumPaidDay").value(656.86))
+			.andExpect(jsonPath("$.totalSumPaidMonth").value(8414.52))
+			.andExpect(jsonPath("$.totalMonthTrend").value(12020.70));
 	}
 }

@@ -20,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.corbanmultibancos.business.dto.ReportItemDTO;
 import com.corbanmultibancos.business.dto.ReportTotalDTO;
 import com.corbanmultibancos.business.repositories.ReportRepository;
+import com.corbanmultibancos.business.util.DateUtil;
 
 @ExtendWith(SpringExtension.class)
 public class ReportServiceTests {
@@ -29,10 +30,15 @@ public class ReportServiceTests {
 
 	@Mock
 	private ReportRepository reportRepository;
+	
+	@Mock
+	private DateUtil dateUtil;
 
 	List<ReportItemDTO> report;
 	List<Long> teamIds;
 	LocalDate today;
+	LocalDate firstDayOfMonth;
+	LocalDate lastDayOfMonth;
 
 	@BeforeEach
 	void setUp() {
@@ -47,10 +53,15 @@ public class ReportServiceTests {
 				new BigDecimal("600.00"), new BigDecimal("9000.00")));
 		report.add(new ReportItemDTO("Equipe A", "Fernanda Santos", 12L, new BigDecimal("1100.00"),
 				new BigDecimal("950.00"), new BigDecimal("14000.00")));
-		teamIds = List.of(1L,2L);
-		today = LocalDate.now();
+		teamIds = List.of(1L, 2L);
+		today = LocalDate.of(2025, 6, 21);
+		firstDayOfMonth = LocalDate.of(2025, 6, 1);
+		lastDayOfMonth = LocalDate.of(2025, 6, 30);
 		Mockito.when(reportRepository.findReportByDates(any(), any(), any(), eq(List.of()))).thenReturn(List.of());
 		Mockito.when(reportRepository.findReportByDates(any(), any(), any(), eq(teamIds))).thenReturn(report);
+		Mockito.when(dateUtil.getDateOfCurrentDay()).thenReturn(today);
+		Mockito.when(dateUtil.getDateOfFirstDayOfMonth()).thenReturn(firstDayOfMonth);
+		Mockito.when(dateUtil.getDateOfLastDayOfMonth()).thenReturn(lastDayOfMonth);
 	}
 
 	@Test
@@ -58,21 +69,24 @@ public class ReportServiceTests {
 		ReportTotalDTO finalReport = reportService.getReport(List.of());
 		Assertions.assertTrue(finalReport.getResultByTeam().isEmpty());
 		Assertions.assertEquals(0L, finalReport.getTotalCount());
-		Assertions.assertEquals(0.0, finalReport.getTotalSumGeneratedDay());
-		Assertions.assertEquals(0.0, finalReport.getTotalSumPaidDay());
-		Assertions.assertEquals(0.0, finalReport.getTotalSumPaidMonth());
-		Assertions.assertEquals(0.0, finalReport.getTotalMonthTrend());
+		Assertions.assertEquals(BigDecimal.ZERO, finalReport.getTotalSumGeneratedDay());
+		Assertions.assertEquals(BigDecimal.ZERO, finalReport.getTotalSumPaidDay());
+		Assertions.assertEquals(BigDecimal.ZERO, finalReport.getTotalSumPaidMonth());
+		Assertions.assertEquals(BigDecimal.ZERO.setScale(2), finalReport.getTotalMonthTrend());
 	}
 
 	@Test
 	public void getReportShouldReturnReportWhenNotEmptyTeamList() {
 		ReportTotalDTO finalReport = reportService.getReport(teamIds);
-		Double trend = (finalReport.getTotalSumPaidMonth() / today.getDayOfMonth()) * today.lengthOfMonth();
+		BigDecimal generatedDay = new BigDecimal(5581.5).setScale(2);
+		BigDecimal paidDay = new BigDecimal(4700.0).setScale(2);
+		BigDecimal paidMonth = new BigDecimal(68000.0).setScale(2);
+		BigDecimal trend = new BigDecimal(97143.0).setScale(2);
 		Assertions.assertFalse(finalReport.getResultByTeam().isEmpty());
 		Assertions.assertEquals(65L, finalReport.getTotalCount());
-		Assertions.assertEquals(5581.50, finalReport.getTotalSumGeneratedDay());
-		Assertions.assertEquals(4700.00, finalReport.getTotalSumPaidDay());
-		Assertions.assertEquals(68000.00, finalReport.getTotalSumPaidMonth());
+		Assertions.assertEquals(generatedDay, finalReport.getTotalSumGeneratedDay());
+		Assertions.assertEquals(paidDay, finalReport.getTotalSumPaidDay());
+		Assertions.assertEquals(paidMonth, finalReport.getTotalSumPaidMonth());
 		Assertions.assertEquals(trend, finalReport.getTotalMonthTrend());
 	}
 }

@@ -1,5 +1,6 @@
 package com.corbanmultibancos.business.dto;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,16 +8,17 @@ public class ReportTotalDTO {
 
 	private List<ReportByTeamDTO> resultByTeam = new ArrayList<>();
 	private Long totalCount;
-	private Double totalSumGeneratedDay;
-	private Double totalSumPaidDay;
-	private Double totalSumPaidMonth;
-	private Double totalMonthTrend;
+	private BigDecimal totalSumGeneratedDay;
+	private BigDecimal totalSumPaidDay;
+	private BigDecimal totalSumPaidMonth;
+	private BigDecimal totalMonthTrend;
 
 	public ReportTotalDTO() {
 	}
 
-	public ReportTotalDTO(Long totalCount, Double totalSumGeneratedDay, Double totalSumPaidDay,
-			Double totalSumPaidMonth, Double totalMonthTrend) {
+	public ReportTotalDTO(List<ReportByTeamDTO> resultByTeam, Long totalCount, BigDecimal totalSumGeneratedDay,
+			BigDecimal totalSumPaidDay, BigDecimal totalSumPaidMonth, BigDecimal totalMonthTrend) {
+		this.resultByTeam = resultByTeam;
 		this.totalCount = totalCount;
 		this.totalSumGeneratedDay = totalSumGeneratedDay;
 		this.totalSumPaidDay = totalSumPaidDay;
@@ -28,6 +30,10 @@ public class ReportTotalDTO {
 		return resultByTeam;
 	}
 
+	public void setResultByTeam(List<ReportByTeamDTO> resultByTeam) {
+		this.resultByTeam = resultByTeam;
+	}
+
 	public Long getTotalCount() {
 		return totalCount;
 	}
@@ -36,35 +42,35 @@ public class ReportTotalDTO {
 		this.totalCount = totalCount;
 	}
 
-	public Double getTotalSumGeneratedDay() {
+	public BigDecimal getTotalSumGeneratedDay() {
 		return totalSumGeneratedDay;
 	}
 
-	public void setTotalSumGeneratedDay(Double totalSumGeneratedDay) {
+	public void setTotalSumGeneratedDay(BigDecimal totalSumGeneratedDay) {
 		this.totalSumGeneratedDay = totalSumGeneratedDay;
 	}
 
-	public Double getTotalSumPaidDay() {
+	public BigDecimal getTotalSumPaidDay() {
 		return totalSumPaidDay;
 	}
 
-	public void setTotalSumPaidDay(Double totalSumPaidDay) {
+	public void setTotalSumPaidDay(BigDecimal totalSumPaidDay) {
 		this.totalSumPaidDay = totalSumPaidDay;
 	}
 
-	public Double getTotalSumPaidMonth() {
+	public BigDecimal getTotalSumPaidMonth() {
 		return totalSumPaidMonth;
 	}
 
-	public void setTotalSumPaidMonth(Double totalSumPaidMonth) {
+	public void setTotalSumPaidMonth(BigDecimal totalSumPaidMonth) {
 		this.totalSumPaidMonth = totalSumPaidMonth;
 	}
 
-	public Double getTotalMonthTrend() {
+	public BigDecimal getTotalMonthTrend() {
 		return totalMonthTrend;
 	}
 
-	public void setTotalMonthTrend(Double totalMonthTrend) {
+	public void setTotalMonthTrend(BigDecimal totalMonthTrend) {
 		this.totalMonthTrend = totalMonthTrend;
 	}
 }
