@@ -1,5 +1,6 @@
 package com.corbanmultibancos.business.dto;
 
+import com.corbanmultibancos.business.validations.CPF;
 import com.corbanmultibancos.business.validations.EmployeeCreationDTOValid;
 
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +9,8 @@ import jakarta.validation.constraints.NotBlank;
 public class EmployeeCreateDTO {
 
 	private Long id;
-	
+
+	@CPF
 	@NotBlank(message = "Obrigatório informar o CPF do funcionário")
 	private String cpf;
 	

@@ -138,6 +138,17 @@ public class EmployeeControllerIntegrationTests {
 	}
 
 	@Test
+	public void createEmployeeShouldReturnUnprocessableEntityWhenInvalidCpf() throws Exception {
+		employeeCreationDto.setCpf("12345678900");
+		String employeeJson = objectMapper.writeValueAsString(employeeCreationDto);
+		mockMvc.perform(post("/employees")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(employeeJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+
+	@Test
 	public void createEmployeeShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
 		employeeCreationDto.setName(null);
 		String employeeJson = objectMapper.writeValueAsString(employeeCreationDto);

@@ -172,6 +172,17 @@ public class CustomerControllerIntegrationTests {
 	}
 
 	@Test
+	public void createCustomerShouldReturnUnprocessableEntityWhenInvalidCpf() throws Exception {
+		customerDto.setCpf("12345678900");
+		String customerJson = objectMapper.writeValueAsString(customerDto);
+		mockMvc.perform(post("/customers")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(customerJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnprocessableEntity());
+	}
+
+	@Test
 	public void createCustomerShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
 		customerDto.setName(null);
 		String customerJson = objectMapper.writeValueAsString(customerDto);
