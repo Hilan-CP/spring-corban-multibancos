@@ -17,13 +17,12 @@ import com.corbanmultibancos.business.mappers.EmployeeMapper;
 import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+import com.corbanmultibancos.business.util.ErrorMessage;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class EmployeeService {
-	private static final String EMPLOYEE_NOT_FOUND = "Funcionário não encontrado";
-	private static final String MULTIPLE_PARAMS = "Não é permitida a busca usando mais de um parâmetro";
 
 	@Autowired
 	private EmployeeRepository employeeRepository;
@@ -34,7 +33,7 @@ public class EmployeeService {
 	@Transactional(readOnly = true)
 	public EmployeeUserDTO getEmployeeById(Long id) {
 		Optional<Employee> result = employeeRepository.findById(id);
-		Employee employee = result.orElseThrow(() -> new ResourceNotFoundException(EMPLOYEE_NOT_FOUND));
+		Employee employee = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND));
 		return EmployeeMapper.toEmployeeUserDTO(employee);
 	}
 
@@ -76,13 +75,13 @@ public class EmployeeService {
 			return EmployeeMapper.toEmployeeCreationDto(employee);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(EMPLOYEE_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND);
 		}
 	}
 
 	private void validateParameters(String cpf, String name) {
 		if(!cpf.isBlank() && !name.isBlank()) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+			throw new IllegalParameterException(ErrorMessage.MULTIPLE_PARAMS);
 		}
 	}
 

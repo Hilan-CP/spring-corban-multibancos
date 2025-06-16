@@ -27,14 +27,12 @@ import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.ProposalRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+import com.corbanmultibancos.business.util.ErrorMessage;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ProposalService {
-	private static final String PROPOSAL_NOT_FOUND = "Proposta não encontrada";
-	private static final String DATE_PARAMETERS = "As datas informadas são inválidas";
-	private static final String MULTIPLE_PARAMS = "Não é permitida a busca usando código da proposta, nome do funcionário e código banco juntos";
 
 	@Autowired
 	private ProposalRepository proposalRepository;
@@ -54,7 +52,7 @@ public class ProposalService {
 	@Transactional(readOnly = true)
 	public ProposalDataDTO getProposalById(Long id) {
 		Optional<Proposal> result = proposalRepository.findById(id);
-		Proposal proposal = result.orElseThrow(() -> new ResourceNotFoundException(PROPOSAL_NOT_FOUND));
+		Proposal proposal = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROPOSAL_NOT_FOUND));
 		return ProposalMapper.toProposalDataDto(proposal);
 	}
 
@@ -90,17 +88,12 @@ public class ProposalService {
 
 	@Transactional
 	public ProposalDataDTO createProposal(ProposalCreateDTO proposalDto) {
-		try {
-			Proposal proposal = new Proposal();
-			ProposalMapper.copyProposalCreateDtoToEntity(proposalDto, proposal);
-			updateProposalStatus(proposal);
-			setEmployeeAndCustomerAndBank(proposalDto, proposal);
-			proposal = proposalRepository.save(proposal);
-			return ProposalMapper.toProposalDataDto(proposal);
-		}
-		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(PROPOSAL_NOT_FOUND);
-		}
+		Proposal proposal = new Proposal();
+		ProposalMapper.copyProposalCreateDtoToEntity(proposalDto, proposal);
+		updateProposalStatus(proposal);
+		setEmployeeAndCustomerAndBank(proposalDto, proposal);
+		proposal = proposalRepository.save(proposal);
+		return ProposalMapper.toProposalDataDto(proposal);
 	}
 
 	@Transactional
@@ -114,7 +107,7 @@ public class ProposalService {
 			return ProposalMapper.toProposalDataDto(proposal);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(PROPOSAL_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.PROPOSAL_NOT_FOUND);
 		}
 	}
 
@@ -128,7 +121,7 @@ public class ProposalService {
 			return ProposalMapper.toProposalDataDto(proposal);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(PROPOSAL_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.PROPOSAL_NOT_FOUND);
 		}
 	}
 
@@ -145,16 +138,16 @@ public class ProposalService {
 			optionalParams++;
 		}
 		if(optionalParams > 1) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+			throw new IllegalParameterException(ErrorMessage.PROPOSAL_MULTIPLE_PARAMS);
 		}
 		if(!dateFieldName.equals("generation") && !dateFieldName.equals("payment")) {
-			throw new IllegalParameterException(DATE_PARAMETERS);
+			throw new IllegalParameterException(ErrorMessage.DATE_PARAMETERS);
 		}
 		if(beginDate == null || endDate == null) {
-			throw new IllegalParameterException(DATE_PARAMETERS);
+			throw new IllegalParameterException(ErrorMessage.DATE_PARAMETERS);
 		}
 		if(beginDate.isAfter(endDate)) {
-			throw new IllegalParameterException(DATE_PARAMETERS);
+			throw new IllegalParameterException(ErrorMessage.DATE_PARAMETERS);
 		}
 	}
 
@@ -170,17 +163,17 @@ public class ProposalService {
 	private void setEmployeeAndCustomerAndBank(ProposalCreateDTO proposalDto, Proposal proposal) {
 		if(proposalDto.getEmployeeId() != null) {
 			Employee employee = employeeRepository.findById(proposalDto.getEmployeeId())
-					.orElseThrow(() -> new ResourceNotFoundException("Funcionário não encontrado"));
+					.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND));
 			proposal.setEmployee(employee);
 		}
 		if(proposalDto.getCustomerId() != null) {
 			Customer customer = customerRepository.findById(proposalDto.getCustomerId())
-					.orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+					.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.CUSTOMER_NOT_FOUND));
 			proposal.setCustomer(customer);
 		}
 		if(proposalDto.getBankId() != null) {
 			Bank bank = bankRepository.findById(proposalDto.getBankId())
-				.orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+				.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.BANK_NOT_FOUND));
 			proposal.setBank(bank);
 		}
 	}

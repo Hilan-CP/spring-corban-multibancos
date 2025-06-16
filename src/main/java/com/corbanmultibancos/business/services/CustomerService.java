@@ -16,13 +16,12 @@ import com.corbanmultibancos.business.mappers.CustomerMapper;
 import com.corbanmultibancos.business.repositories.CustomerRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+import com.corbanmultibancos.business.util.ErrorMessage;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class CustomerService {
-	private static final String CUSTOMER_NOT_FOUND = "Cliente não encontrado";
-	private static final String MULTIPLE_PARAMS = "Não é permitida a busca usando mais de um parâmetro";
 
 	@Autowired
 	private CustomerRepository customerRepository;
@@ -33,7 +32,7 @@ public class CustomerService {
 	@Transactional(readOnly = true)
 	public CustomerDTO getCustomerById(Long id) {
 		Optional<Customer> result = customerRepository.findById(id);
-		Customer customer = result.orElseThrow(() -> new ResourceNotFoundException(CUSTOMER_NOT_FOUND));
+		Customer customer = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.CUSTOMER_NOT_FOUND));
 		return CustomerMapper.toDto(customer);
 	}
 
@@ -78,7 +77,7 @@ public class CustomerService {
 			return CustomerMapper.toDto(customer);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(CUSTOMER_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.CUSTOMER_NOT_FOUND);
 		}
 	}
 
@@ -94,7 +93,7 @@ public class CustomerService {
 			countParams++;
 		}
 		if(countParams > 1) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+			throw new IllegalParameterException(ErrorMessage.MULTIPLE_PARAMS);
 		}
 	}
 
