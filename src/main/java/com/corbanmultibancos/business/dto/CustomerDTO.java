@@ -2,6 +2,7 @@ package com.corbanmultibancos.business.dto;
 
 import java.time.LocalDate;
 
+import com.corbanmultibancos.business.validations.CPF;
 import com.corbanmultibancos.business.validations.CustomerDTOValid;
 
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +13,7 @@ public class CustomerDTO {
 
 	private Long id;
 
+	@CPF
 	@NotBlank(message = "Obrigatório informar o CPF do cliente")
 	private String cpf;
 

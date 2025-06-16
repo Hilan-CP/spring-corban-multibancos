@@ -13,13 +13,12 @@ import com.corbanmultibancos.business.mappers.BankMapper;
 import com.corbanmultibancos.business.repositories.BankRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+import com.corbanmultibancos.business.util.ErrorMessage;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class BankService {
-	private static final String BANK_NOT_FOUND = "Banco não encontrado";
-	private static final String MULTIPLE_PARAMS = "Não é permitida a busca usando mais de um parâmetro";
 
 	@Autowired
 	private BankRepository bankRepository;
@@ -30,7 +29,7 @@ public class BankService {
 	@Transactional(readOnly = true)
 	public BankDTO getBankById(Long id) {
 		Optional<Bank> result = bankRepository.findById(id);
-		Bank bank = result.orElseThrow(() -> new ResourceNotFoundException(BANK_NOT_FOUND));
+		Bank bank = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.BANK_NOT_FOUND));
 		return BankMapper.toDto(bank);
 	}
 
@@ -69,13 +68,13 @@ public class BankService {
 			bank = bankRepository.save(bank);
 			return BankMapper.toDto(bank);
 		} catch (EntityNotFoundException e) {
-			throw new ResourceNotFoundException(BANK_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.BANK_NOT_FOUND);
 		}
 	}
 
 	private void validateParameters(Integer code, String name) {
 		if (code != 0 && !name.isBlank()) {
-			throw new IllegalParameterException(MULTIPLE_PARAMS);
+			throw new IllegalParameterException(ErrorMessage.MULTIPLE_PARAMS);
 		}
 	}
 

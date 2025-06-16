@@ -1,10 +1,10 @@
 package com.corbanmultibancos.business.controllers;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -393,13 +393,28 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
+	public void updateCancelProposalShouldReturnProposalDataDTOWhenExistingId() throws Exception {
+		mockMvc.perform(put("/proposals/{id}/cancel", existingId)
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("CANCELADA"))
+			.andExpect(jsonPath("$.payment", nullValue()));
+	}
+
+	@Test
+	public void updateCancelProposalShouldReturnNotFoundWhenNonExistingId() throws Exception {
+		mockMvc.perform(put("/proposals/{id}/cancel", nonExistingId)
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
 	public void getProposalsAsCsvShouldReturnResource() throws Exception {
 		mockMvc.perform(get("/proposals/csv?dateField={field}&beginDate={begin}&endDate={end}",
 				dateField, beginDate, endDate))
 			.andExpect(status().isOk())
 			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
 			.andExpect(content().contentType("text/csv;charset=UTF-8"))
-			.andExpect(content().string(containsString("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente")))
-			.andDo(print());
+			.andExpect(content().string(containsString("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente")));
 	}
 }

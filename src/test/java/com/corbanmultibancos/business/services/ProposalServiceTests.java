@@ -222,6 +222,19 @@ public class ProposalServiceTests {
 	}
 
 	@Test
+	public void updateCancelProposalShouldReturnProposalDataDTOWhenExistingId() {
+		ProposalDataDTO proposalDto = proposalService.updateCancelProposal(existingId);
+		Assertions.assertEquals(null, proposalDto.getPayment());
+		Assertions.assertEquals(ProposalStatus.CANCELADA, proposalDto.getStatus());
+	}
+
+	@Test
+	public void updateCancelProposalShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> proposalService.updateCancelProposal(nonExistingId));
+	}
+
+	@Test
 	public void getProposalsAsCsvDataShouldReturnByteArray() {
 		Page<ProposalDataDTO> page = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
 		String data = String.join("\n", "ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente",

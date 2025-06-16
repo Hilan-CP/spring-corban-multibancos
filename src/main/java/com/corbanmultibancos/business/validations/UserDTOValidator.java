@@ -36,12 +36,10 @@ public class UserDTOValidator implements ConstraintValidator<UserDTOValid, UserD
 	}
 
 	private boolean isIdUnavailable(UserDTO userDto) {
-		if (userDto instanceof UserCreateDTO) {
-			UserCreateDTO userCreateDto = (UserCreateDTO) userDto;
-			Long employeeId = userCreateDto.getEmployeeId();
-			if (employeeId != null && repository.existsById(employeeId)) {
-				return true;
-			}
+		UserCreateDTO userCreateDto = (UserCreateDTO) userDto;
+		Long employeeId = userCreateDto.getEmployeeId();
+		if (employeeId != null && repository.existsById(employeeId)) {
+			return true;
 		}
 		return false;
 	}

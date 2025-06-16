@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corbanmultibancos.business.dto.UserCreateDTO;
 import com.corbanmultibancos.business.dto.UserDataDTO;
-import com.corbanmultibancos.business.dto.UserUpdateDTO;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Role;
 import com.corbanmultibancos.business.entities.User;
@@ -21,13 +20,12 @@ import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.RoleRepository;
 import com.corbanmultibancos.business.repositories.UserRepository;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+import com.corbanmultibancos.business.util.ErrorMessage;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class UserService {
-	private static final String USER_NOT_FOUND = "Usuário não encontrado";
-	private static final String NOT_FOUND = "Usuário, funcionário ou role não foram encontrados";
 
 	@Autowired
 	private UserRepository userRepository;
@@ -44,7 +42,7 @@ public class UserService {
 	@Transactional(readOnly = true)
 	public UserDataDTO getUserById(Long id) {
 		Optional<User> result = userRepository.findById(id);
-		User user = result.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+		User user = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 		return UserMapper.toUserDataDto(user);
 	}
 
@@ -67,36 +65,31 @@ public class UserService {
 
 	@Transactional
 	public UserDataDTO createUser(UserCreateDTO userDto) {
-		try {
-			User user = new User();
-			UserMapper.copyUserCreateDtoToEntity(userDto, user);
-			setEmployeeAndRole(user, userDto.getEmployeeId(), userDto.getRoleId());
-			user = userRepository.save(user);
-			return UserMapper.toUserDataDto(user);
-		}
-		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(NOT_FOUND);
-		}
+		User user = new User();
+		UserMapper.copyUserCreateDtoToEntity(userDto, user);
+		setEmployeeAndRole(user, userDto.getEmployeeId(), userDto.getRoleId());
+		user = userRepository.save(user);
+		return UserMapper.toUserDataDto(user);
 	}
 
 	@Transactional
-	public UserDataDTO updateUser(Long id, UserUpdateDTO userDto) {
+	public UserDataDTO updateUser(Long id, UserCreateDTO userDto) {
 		try {
 			User user = userRepository.getReferenceById(id);
-			UserMapper.copyUserUpdateDtoToEntity(userDto, user);
+			UserMapper.copyUserCreateDtoToEntity(userDto, user);
 			setEmployeeAndRole(user, id, userDto.getRoleId());
 			user = userRepository.save(user);
 			return UserMapper.toUserDataDto(user);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND);
 		}
 	}
 
 	@Transactional
 	public void deleteUser(Long id) {
 		if(!userRepository.existsById(id)) {
-			throw new ResourceNotFoundException(USER_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND);
 		}
 		//remover associação antes de deletar
 		Employee employee = employeeRepository.findById(id).get();
@@ -113,11 +106,20 @@ public class UserService {
 	}
 
 	private void setEmployeeAndRole(User user, Long employeeId, Long roleId) {
-		Employee employee = employeeRepository.getReferenceById(employeeId);
-		user.setEmployee(employee);
-		if(roleId != null) {
+		try {
+			Employee employee = employeeRepository.getReferenceById(employeeId);
+			user.setEmployee(employee);
+		}
+		catch(EntityNotFoundException e) {
+			throw new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND);
+		}
+		
+		try {
 			Role role = roleRepository.getReferenceById(roleId);
 			user.setRole(role);
+		}
+		catch(EntityNotFoundException e) {
+			throw new ResourceNotFoundException(ErrorMessage.ROLE_NOT_FOUND);
 		}
 	}
 }

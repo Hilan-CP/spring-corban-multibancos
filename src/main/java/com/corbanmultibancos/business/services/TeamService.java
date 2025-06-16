@@ -14,13 +14,12 @@ import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.TeamRepository;
 import com.corbanmultibancos.business.services.exceptions.DataIntegrityException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
+import com.corbanmultibancos.business.util.ErrorMessage;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class TeamService {
-	private static final String TEAM_NOT_FOUND = "Equipe não encontrada";
-	private static final String FOREIGN_KEY_VIOLATION = "A equipe não pode ser apagada porque não está vazia";
 
 	@Autowired
 	private TeamRepository teamRepository;
@@ -34,7 +33,7 @@ public class TeamService {
 	@Transactional(readOnly = true)
 	public TeamDTO getTeamById(Long id) {
 		Optional<Team> result = teamRepository.findById(id);
-		Team team = result.orElseThrow(() -> new ResourceNotFoundException(TEAM_NOT_FOUND));
+		Team team = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND));
 		return TeamMapper.toDto(team);
 	}
 
@@ -72,17 +71,17 @@ public class TeamService {
 			return TeamMapper.toDto(team);
 		}
 		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(TEAM_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND);
 		}
 	}
 
 	@Transactional
 	public void deleteTeam(Long id) {
 		if(!teamRepository.existsById(id)) {
-			throw new ResourceNotFoundException(TEAM_NOT_FOUND);
+			throw new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND);
 		}
 		if(employeeRepository.existsByTeamId(id)) {
-			throw new DataIntegrityException(FOREIGN_KEY_VIOLATION);
+			throw new DataIntegrityException(ErrorMessage.FOREIGN_KEY_VIOLATION);
 		}
 		teamRepository.deleteById(id);
 	}

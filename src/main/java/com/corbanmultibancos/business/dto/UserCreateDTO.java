@@ -1,5 +1,6 @@
 package com.corbanmultibancos.business.dto;
 
+import com.corbanmultibancos.business.validations.CreateGroup;
 import com.corbanmultibancos.business.validations.UserDTOValid;
 
 import jakarta.validation.constraints.NotBlank;
@@ -8,13 +9,13 @@ import jakarta.validation.constraints.NotNull;
 @UserDTOValid
 public class UserCreateDTO extends UserDTO {
 
-	@NotNull(message = "Obrigatório informar o ID do funcionário")
+	@NotNull(message = "Obrigatório informar o ID do funcionário", groups = CreateGroup.class)
 	private Long employeeId;
 
-	@NotBlank(message = "Obrigatório informar a senha")
+	@NotBlank(message = "Obrigatório informar a senha", groups = CreateGroup.class)
 	private String password;
 
-	@NotNull(message = "Obrigatório informar o tipo de usuário")
+	@NotNull(message = "Obrigatório informar o tipo de usuário", groups = CreateGroup.class)
 	private Long roleId;
 
 	public UserCreateDTO() {
