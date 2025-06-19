@@ -30,6 +30,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 @EnableMethodSecurity
 public class SecurityConfig {
 	private static final String H2_CONSOLE = "/h2-console/**";
+	private static final String LOGIN = "/login";
 
 	@Value("${jwt.public.key}")
 	private RSAPublicKey publicKey;
@@ -41,8 +42,8 @@ public class SecurityConfig {
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable());
 		http.authorizeHttpRequests(authorizeHttpRequest -> authorizeHttpRequest
-				.requestMatchers(H2_CONSOLE).permitAll()
-				.anyRequest().permitAll());
+				.requestMatchers(H2_CONSOLE, LOGIN).permitAll()
+				.anyRequest().authenticated());
 		http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 		http.httpBasic(Customizer.withDefaults());
 		http.oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()));
