@@ -22,14 +22,14 @@ INSERT INTO tb_employee(cpf, name, team_id) VALUES ('94926959011','George Lucas'
 INSERT INTO tb_role(authority) VALUES ('GESTOR');
 INSERT INTO tb_role(authority) VALUES ('CONSULTOR');
 
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (1,'florinda','florinda123',2);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (2,'ricardo','ricardo123',2);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (3,'zenobia','zenobia123',1);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (4,'suzete','suzete123',2);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (5,'tereza','tereza123',1);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (6,'joao','joao123',2);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (7,'jose','jose123',2);
-INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (8,'wagner','wagner123',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (1,'florinda','$2a$10$DxmwuPKXmQZyn7f4oUTOHOne3jErAB8iTDr0/sGKUGPJP3Q9GszxG',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (2,'ricardo','$2a$10$VuF6ZIqR6kbkVhNRw5TLyO9rI5B80fCUc/Q2QwZUuVvV6yoCo10YW',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (3,'zenobia','$2a$10$yWgObgBs5WeN0HJQMAO/wOL7Y2OXuEvZlk4GNv/gPP84F490tqg1e',1);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (4,'suzete','$2a$10$IBAeLWkm0xC00ZUCu2zCYeLo3QO7cAJGaIFqPF9cvksZA9jH5Aesq',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (5,'tereza','$2a$10$WPXwRrSA7laHimiPzrFBpOOOHyUbIh5lCr2N3t/8gO3TMBsTOfzWy',1);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (6,'joao','$2a$10$vlIXcAQvkAS9oOzO2wjSWOVZpIpbCe8Cj6LLv8DT6Ao6qO5NVVnnq',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (7,'jose','$2a$10$IvR/KVgDw2TrE0e67shsOuGzfND5UYdp6pezcUlVuOKmzt.6SP1xy',2);
+INSERT INTO tb_user(employee_id, username, password, role_id) VALUES (8,'wagner','$2a$10$1SpIQvvknu9I7erY.5Qmd.DA4qlULHu8sW2MdBBLB8CMYgGSunidO',2);
 
 INSERT INTO tb_customer(cpf, name, birth_date, phone) VALUES ('00066098645','SERGIO','1969-08-13','11930587328');
 INSERT INTO tb_customer(cpf, name, birth_date, phone) VALUES ('00384722288','FABIANA','1975-06-04','14937814172');
