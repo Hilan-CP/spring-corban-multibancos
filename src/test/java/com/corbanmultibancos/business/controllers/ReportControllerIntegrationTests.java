@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.corbanmultibancos.business.config.ClockConfig;
+import com.corbanmultibancos.business.util.TokenUtil;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,10 +24,19 @@ import com.corbanmultibancos.business.config.ClockConfig;
 @Import(ClockConfig.class)
 public class ReportControllerIntegrationTests {
 
+	private static String gestorToken;
+	private static String consultorToken;
+
 	@Autowired
 	private MockMvc mockMvc;
 
 	private String teamIds;
+
+	@BeforeAll
+	static void setUpOnce(@Autowired MockMvc mockMvc, @Autowired TokenUtil tokenUtil) throws Exception {
+		gestorToken = tokenUtil.logInAndGetToken(mockMvc, "zenobia", "zenobia123");
+		consultorToken = tokenUtil.logInAndGetToken(mockMvc, "florinda", "florinda123");
+	}
 
 	@BeforeEach
 	void setUp() {
@@ -33,9 +44,10 @@ public class ReportControllerIntegrationTests {
 	}
 
 	@Test
-	public void getReportShouldReturnEmptyReportWhenEmptyTeamList() throws Exception {
+	public void getReportShouldReturnEmptyReportWhenEmptyTeamListAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/report?teamIds=")
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultByTeam").isEmpty())
 			.andExpect(jsonPath("$.totalCount").value(0))
@@ -46,9 +58,10 @@ public class ReportControllerIntegrationTests {
 	}
 
 	@Test
-	public void getReportShouldReturnReportWhenNotEmptyTeamList() throws Exception {
+	public void getReportShouldReturnReportWhenNotEmptyTeamListAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/report?teamIds={teamIds}", teamIds)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultByTeam").isNotEmpty())
 			.andExpect(jsonPath("$.totalCount").value(8))
@@ -56,5 +69,20 @@ public class ReportControllerIntegrationTests {
 			.andExpect(jsonPath("$.totalSumPaidDay").value(656.86))
 			.andExpect(jsonPath("$.totalSumPaidMonth").value(8414.52))
 			.andExpect(jsonPath("$.totalMonthTrend").value(12020.70));
+	}
+
+	@Test
+	public void getReportShouldReturnForbiddenWhenRoleConsultor() throws Exception {
+		mockMvc.perform(get("/report?teamIds={teamIds}", teamIds)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	public void getReportShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/report?teamIds={teamIds}", teamIds)
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
 	}
 }
