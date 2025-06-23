@@ -2,13 +2,11 @@ package com.corbanmultibancos.business.services;
 
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +18,10 @@ import com.corbanmultibancos.business.entities.Customer;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Proposal;
 import com.corbanmultibancos.business.entities.ProposalStatus;
+import com.corbanmultibancos.business.entities.User;
 import com.corbanmultibancos.business.mappers.ProposalMapper;
 import com.corbanmultibancos.business.repositories.BankRepository;
 import com.corbanmultibancos.business.repositories.CustomerRepository;
-import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.ProposalRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
@@ -38,9 +36,6 @@ public class ProposalService {
 	private ProposalRepository proposalRepository;
 
 	@Autowired
-	private EmployeeRepository employeeRepository;
-
-	@Autowired
 	private CustomerRepository customerRepository;
 
 	@Autowired
@@ -48,11 +43,15 @@ public class ProposalService {
 	
 	@Autowired
 	private ProposalCsvExporterService exporterService;
+	
+	@Autowired
+	private AuthorizationService authorizationService;
 
 	@Transactional(readOnly = true)
 	public ProposalDataDTO getProposalById(Long id) {
 		Optional<Proposal> result = proposalRepository.findById(id);
 		Proposal proposal = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROPOSAL_NOT_FOUND));
+		authorizationService.authorizeAdminOrOwner(proposal.getEmployee().getId());
 		return ProposalMapper.toProposalDataDto(proposal);
 	}
 
@@ -60,23 +59,25 @@ public class ProposalService {
 	public Page<ProposalDataDTO> getProposals(String code, String employeeName, Integer bankCode, String dateFieldName,
 			LocalDate beginDate, LocalDate endDate, Pageable pageable) {
 		validateParameters(code, employeeName, bankCode, dateFieldName, beginDate, endDate);
+		User user = authorizationService.getLoggedUser();
 		Page<ProposalDataDTO> page;
+		Map<String, Object> filter = new HashMap<>();
+		filter.put("dateField", dateFieldName);
+		filter.put("beginDate", beginDate);
+		filter.put("endDate", endDate);
+		if(!authorizationService.isAdmin(user)) {
+			filter.put("userId", user.getId());
+		}
 		if(!code.isBlank()) {
-			page = getProposalByCode(code);
+			filter.put("code", code);
 		}
-		else {
-			Map<String, Object> filter = new HashMap<>();
-			filter.put("dateField", dateFieldName);
-			filter.put("beginDate", beginDate);
-			filter.put("endDate", endDate);
-			if(!employeeName.isBlank()) {
-				filter.put("employeeName", employeeName);
-			}
-			if(bankCode != null && bankCode != 0) {
-				filter.put("bankCode", bankCode);
-			}
-			page = proposalRepository.findBy(filter, pageable);
+		if(!employeeName.isBlank()) {
+			filter.put("employeeName", employeeName);
 		}
+		if(bankCode != null && bankCode != 0) {
+			filter.put("bankCode", bankCode);
+		}
+		page = proposalRepository.findBy(filter, pageable);
 		return page;
 	}
 
@@ -100,6 +101,7 @@ public class ProposalService {
 	public ProposalDataDTO updateProposal(Long id, ProposalCreateDTO proposalDto) {
 		try {
 			Proposal proposal = proposalRepository.getReferenceById(id);
+			authorizationService.authorizeAdminOrOwner(proposal.getEmployee().getId());
 			ProposalMapper.copyProposalCreateDtoToEntity(proposalDto, proposal);
 			updateProposalStatus(proposal);
 			setEmployeeAndCustomerAndBank(proposalDto, proposal);
@@ -151,19 +153,9 @@ public class ProposalService {
 		}
 	}
 
-	private Page<ProposalDataDTO> getProposalByCode(String code) {
-		Optional<Proposal> result = proposalRepository.findByCode(code);
-		if(result.isPresent()) {
-			ProposalDataDTO proposalDto = ProposalMapper.toProposalDataDto(result.get());
-			return new PageImpl<>(List.of(proposalDto));
-		}
-		return Page.empty();
-	}
-
 	private void setEmployeeAndCustomerAndBank(ProposalCreateDTO proposalDto, Proposal proposal) {
-		if(proposalDto.getEmployeeId() != null) {
-			Employee employee = employeeRepository.findById(proposalDto.getEmployeeId())
-					.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND));
+		if(proposal.getEmployee() == null) {
+			Employee employee = authorizationService.getLoggedUser().getEmployee();
 			proposal.setEmployee(employee);
 		}
 		if(proposalDto.getCustomerId() != null) {

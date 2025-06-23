@@ -8,6 +8,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,18 +32,21 @@ public class TeamController {
 	@Autowired
 	private TeamService teamService;
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@GetMapping("/{id}")
 	public ResponseEntity<TeamDTO> getTeamById(@PathVariable Long id) {
 		TeamDTO teamDto = teamService.getTeamById(id);
 		return ResponseEntity.ok(teamDto);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@GetMapping
 	public ResponseEntity<List<TeamDTO>> getTeams(@RequestParam(defaultValue = "") String name) {
 		List<TeamDTO> teamDtoList = teamService.getTeams(name);
 		return ResponseEntity.ok(teamDtoList);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@GetMapping("/csv")
 	public ResponseEntity<Resource> getTeamsAsCsv(@RequestParam(defaultValue = "") String name){
 		byte[] csvData = teamService.getTeamsAsCsvData(name);
@@ -53,6 +57,7 @@ public class TeamController {
 				.body(resource);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@PostMapping
 	public ResponseEntity<TeamDTO> createTeam(@Valid @RequestBody TeamDTO teamDto) {
 		teamDto = teamService.createTeam(teamDto);
@@ -60,12 +65,14 @@ public class TeamController {
 		return ResponseEntity.created(uri).body(teamDto);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@PutMapping("/{id}")
 	public ResponseEntity<TeamDTO> updateTeam(@PathVariable Long id, @Valid @RequestBody TeamDTO teamDto) {
 		teamDto = teamService.updateTeam(id, teamDto);
 		return ResponseEntity.ok(teamDto);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteTeam(@PathVariable Long id) {
 		teamService.deleteTeam(id);

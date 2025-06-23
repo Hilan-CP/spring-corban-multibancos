@@ -28,10 +28,11 @@ import com.corbanmultibancos.business.entities.Customer;
 import com.corbanmultibancos.business.entities.Employee;
 import com.corbanmultibancos.business.entities.Proposal;
 import com.corbanmultibancos.business.entities.ProposalStatus;
+import com.corbanmultibancos.business.entities.Role;
+import com.corbanmultibancos.business.entities.User;
 import com.corbanmultibancos.business.mappers.ProposalMapper;
 import com.corbanmultibancos.business.repositories.BankRepository;
 import com.corbanmultibancos.business.repositories.CustomerRepository;
-import com.corbanmultibancos.business.repositories.EmployeeRepository;
 import com.corbanmultibancos.business.repositories.ProposalRepository;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
@@ -48,9 +49,6 @@ public class ProposalServiceTests {
 	private ProposalRepository proposalRepository;
 
 	@Mock
-	private EmployeeRepository employeeRepository;
-
-	@Mock
 	private CustomerRepository customerRepository;
 
 	@Mock
@@ -58,11 +56,14 @@ public class ProposalServiceTests {
 	
 	@Mock
 	private ProposalCsvExporterService exporterService;
+	
+	@Mock
+	private AuthorizationService authorizationService;
 
 	private Long existingId;
 	private Long nonExistingId;
+	private Long employeeId;
 	private String existingCode;
-	private String nonExistingCode;
 	private String partialEmployeeName;
 	private Integer bankCode;
 	private String dateFieldName;
@@ -70,6 +71,7 @@ public class ProposalServiceTests {
 	private LocalDate endDate;
 	private Proposal proposalEntity;
 	private Employee employee;
+	private User user;
 	private Bank bank;
 	private Customer customer;
 	private Page<ProposalDataDTO> proposalDtoPage;
@@ -80,36 +82,35 @@ public class ProposalServiceTests {
 	void setUp() {
 		existingId = 1L;
 		nonExistingId = 1000L;
+		employeeId = 1L;
 		existingCode = "993";
-		nonExistingCode = "does not exist";
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateFieldName = "generation";
 		beginDate = LocalDate.of(2025, 6, 1);
 		endDate = LocalDate.of(2025, 6, 1);
-		employee = new Employee(existingId, "67661033020", "Jose", null, null);
+		employee = new Employee(employeeId, "67661033020", "Jose", user, null);
+		user = new User(employeeId, "jose", "password123", employee, new Role(1L, "GESTOR"));
 		bank = new Bank(existingId, bankCode, "PAN");
 		customer = new Customer(existingId, "00066098645", "Sergio", "44987654321", LocalDate.now());
 		proposalEntity = new Proposal(existingId, existingCode, 1000.0, beginDate, endDate, ProposalStatus.CONTRATADA,
 				employee, customer, bank);
 		proposalDtoPage = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
-		proposalCreateDto = new ProposalCreateDTO(null, "123ABC", 100.0, beginDate, endDate, employee.getId(),
-				customer.getId(), bank.getId());
+		proposalCreateDto = new ProposalCreateDTO(null, "123ABC", 100.0, beginDate, endDate, customer.getId(), bank.getId());
 		pageable = PageRequest.of(0, 10);
 		Mockito.when(proposalRepository.findById(existingId)).thenReturn(Optional.of(proposalEntity));
 		Mockito.when(proposalRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(proposalRepository.getReferenceById(existingId)).thenReturn(proposalEntity);
 		Mockito.when(proposalRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Mockito.when(proposalRepository.save(any())).thenReturn(proposalEntity);
-		Mockito.when(proposalRepository.findByCode(existingCode)).thenReturn(Optional.of(proposalEntity));
-		Mockito.when(proposalRepository.findByCode(nonExistingCode)).thenReturn(Optional.empty());
 		Mockito.when(proposalRepository.findBy(anyMap(), any(Pageable.class))).thenReturn(proposalDtoPage);
 		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
 		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
-		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
 		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.doNothing().when(authorizationService).authorizeAdminOrOwner(employeeId);
+		Mockito.doReturn(user).when(authorizationService).getLoggedUser();
+		Mockito.doReturn(true).when(authorizationService).isAdmin(any());
 	}
 
 	@Test
@@ -128,13 +129,6 @@ public class ProposalServiceTests {
 		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(existingCode, "", 0, dateFieldName, beginDate,
 				endDate, pageable);
 		Assertions.assertEquals(1, dtoPage.getSize());
-	}
-
-	@Test
-	public void getProposalsShouldReturnEmptyPageWhenNonExistingCode() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(nonExistingCode, "", 0, dateFieldName, beginDate,
-				endDate, pageable);
-		Assertions.assertTrue(dtoPage.isEmpty());
 	}
 
 	@Test
@@ -186,13 +180,6 @@ public class ProposalServiceTests {
 	public void createProposalShouldReturnProposalDataDTOWhenValidData() {
 		ProposalDataDTO proposalDto = proposalService.createProposal(proposalCreateDto);
 		Assertions.assertNotNull(proposalDto.getId());
-	}
-
-	@Test
-	public void createProposalShouldThrowResourceNotFoundExceptionWhenNonExistingEmployee() {
-		proposalCreateDto.setEmployeeId(nonExistingId);
-		Assertions.assertThrows(ResourceNotFoundException.class,
-				() -> proposalService.createProposal(proposalCreateDto));
 	}
 
 	@Test

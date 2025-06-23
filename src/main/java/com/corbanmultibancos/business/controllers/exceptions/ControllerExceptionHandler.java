@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.corbanmultibancos.business.services.exceptions.DataIntegrityException;
+import com.corbanmultibancos.business.services.exceptions.ForbiddenException;
 import com.corbanmultibancos.business.services.exceptions.IllegalParameterException;
 import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundException;
 
@@ -47,5 +48,11 @@ public class ControllerExceptionHandler {
 		HttpStatus status = HttpStatus.CONFLICT;
 		CustomError error = new CustomError(Instant.now(), status.value(), exception.getMessage(), request.getRequestURI());
 		return ResponseEntity.status(status).body(error);
+	}
+
+	@ExceptionHandler(ForbiddenException.class)
+	public ResponseEntity<Void> handleForbiddenException(ForbiddenException exception, HttpServletRequest request){
+		HttpStatus status = HttpStatus.FORBIDDEN;
+		return ResponseEntity.status(status).build();
 	}
 }

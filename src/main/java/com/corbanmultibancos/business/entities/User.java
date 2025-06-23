@@ -1,6 +1,11 @@
 package com.corbanmultibancos.business.entities;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +19,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_user")
-public class User {
+public class User implements UserDetails {
 
 	@Id
 	private Long id;
@@ -52,6 +57,7 @@ public class User {
 		this.id = id;
 	}
 
+	@Override
 	public String getUsername() {
 		return username;
 	}
@@ -60,6 +66,7 @@ public class User {
 		this.username = username;
 	}
 
+	@Override
 	public String getPassword() {
 		return password;
 	}
@@ -82,6 +89,11 @@ public class User {
 
 	public void setRole(Role role) {
 		this.role = role;
+	}
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return List.of(role);
 	}
 
 	@Override

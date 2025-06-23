@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +24,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.corbanmultibancos.business.dto.ProposalCreateDTO;
+import com.corbanmultibancos.business.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 public class ProposalControllerIntegrationTests {
+
+	private static String gestorToken;
+	private static String consultorToken;
+	private static String ownerConsultorToken;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -39,7 +45,6 @@ public class ProposalControllerIntegrationTests {
 	private Long existingId;
 	private Long nonExistingId;
 	private String existingCode;
-	private String nonExistingCode;
 	private String otherCode;
 	private String partialEmployeeName;
 	private Integer bankCode;
@@ -48,25 +53,32 @@ public class ProposalControllerIntegrationTests {
 	private LocalDate endDate;
 	private ProposalCreateDTO proposalCreateDto;
 
+	@BeforeAll
+	static void setUpOnce(@Autowired MockMvc mockMvc, @Autowired TokenUtil tokenUtil) throws Exception {
+		gestorToken = tokenUtil.logInAndGetToken(mockMvc, "zenobia", "zenobia123");
+		consultorToken = tokenUtil.logInAndGetToken(mockMvc, "florinda", "florinda123");
+		ownerConsultorToken = tokenUtil.logInAndGetToken(mockMvc, "ricardo", "ricardo123");
+	}
+
 	@BeforeEach
 	void setUp() {
 		existingId = 1L;
 		nonExistingId = 10000L;
 		existingCode = "993";
-		nonExistingCode = "nao existe";
 		otherCode = "1430";
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateField = "generation";
 		beginDate = LocalDate.of(2025, 1, 1);
 		endDate = LocalDate.now();
-		proposalCreateDto = new ProposalCreateDTO(null, "123", 100.0, LocalDate.now(), null, 1L, 1L, 1L);
+		proposalCreateDto = new ProposalCreateDTO(null, "123", 100.0, LocalDate.now(), null, 1L, 1L);
 	}
 
 	@Test
-	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingId() throws Exception {
+	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingIdAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/proposals/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.code").exists())
@@ -81,27 +93,53 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
+	public void getProposalByIdShouldReturnForbiddenWhenExistingIdAndRoleConsultorNotOwner() throws Exception {
+		mockMvc.perform(get("/proposals/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isForbidden());
+	}
+	
+	@Test
+	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingIdAndRoleConsultorOwner() throws Exception {
+		mockMvc.perform(get("/proposals/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + ownerConsultorToken))
+			.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void getProposalByIdShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/proposals/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	public void getProposalByIdShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(get("/proposals/{id}", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
-	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCode() throws Exception {
+	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCodeAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/proposals?code={code}&dateField={field}&beginDate={begin}&endDate={end}",
 				existingCode, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty())
 			.andExpect(jsonPath("$.numberOfElements").value(1));
 	}
 
 	@Test
-	public void getProposalsShouldReturnEmptyPageWhenNonExistingCode() throws Exception {
+	public void getProposalsShouldReturnEmptyPageWhenExistingCodeAndRoleConsultorNotOwner() throws Exception {
 		mockMvc.perform(get("/proposals?code={code}&dateField={field}&beginDate={begin}&endDate={end}",
-				nonExistingCode, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				existingCode, dateField, beginDate, endDate)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isEmpty());
 	}
@@ -110,7 +148,8 @@ public class ProposalControllerIntegrationTests {
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndBankCodeNotNull() throws Exception {
 		mockMvc.perform(get("/proposals?bankCode={bankCode}&dateField={field}&beginDate={begin}&endDate={end}",
 				bankCode, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
 	}
@@ -119,24 +158,46 @@ public class ProposalControllerIntegrationTests {
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndEmployeeNameNotNull() throws Exception {
 		mockMvc.perform(get("/proposals?employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
 				partialEmployeeName, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
 	}
 
 	@Test
-	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateNotNull() throws Exception {
+	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateNotNullAndRoleGestor() throws Exception {
+		mockMvc.perform(get("/proposals?dateField={field}&beginDate={begin}&endDate={end}",
+				dateField, beginDate, endDate)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content").isNotEmpty());
+	}
+	
+	@Test
+	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateNotNullAndRoleConsultor() throws Exception {
+		mockMvc.perform(get("/proposals?dateField={field}&beginDate={begin}&endDate={end}",
+				dateField, beginDate, endDate)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content").isNotEmpty())
+			.andExpect(jsonPath("$.content[0].employeeName").value("Florinda Flores"));
+	}
+
+	@Test
+	public void getProposalsShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
 		mockMvc.perform(get("/proposals?dateField={field}&beginDate={begin}&endDate={end}",
 				dateField, beginDate, endDate)
 				.accept(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.content").isNotEmpty());
+			.andExpect(status().isUnauthorized());
 	}
 
 	@Test
 	public void getProposalsShouldReturnBadRequestWhenDateIsNull() throws Exception {
 		mockMvc.perform(get("/proposals")
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -144,7 +205,8 @@ public class ProposalControllerIntegrationTests {
 	public void getProposalsShouldReturnBadRequestWhenInvalidDateField() throws Exception {
 		mockMvc.perform(get("/proposals?dateField={field}&beginDate={begin}&endDate={end}",
 				"cancel", beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -152,7 +214,8 @@ public class ProposalControllerIntegrationTests {
 	public void getProposalsShouldReturnBadRequestWhenBankCodeAndEmployeeNameNotNull() throws Exception {
 		mockMvc.perform(get("/proposals?bankCode={bankCode}&employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
 				bankCode, partialEmployeeName, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -160,7 +223,8 @@ public class ProposalControllerIntegrationTests {
 	public void getProposalsShouldReturnBadRequestWhenAllParamters() throws Exception {
 		mockMvc.perform(get("/proposals?code={code}&bankCode={bankCode}&employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
 				existingCode, bankCode, partialEmployeeName, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -170,7 +234,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.code").value(proposalCreateDto.getCode()))
@@ -185,13 +250,24 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
+	public void createProposalShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
+		mockMvc.perform(post("/proposals")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(proposalJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	public void createProposalShouldReturnUnprocessableEntityWhenCodeIsNull() throws Exception {
 		proposalCreateDto.setCode(null);
 		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -202,7 +278,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -213,18 +290,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isUnprocessableEntity());
-	}
-
-	@Test
-	public void createProposalShouldReturnUnprocessableEntityWhenEmployeeIdIsNull() throws Exception {
-		proposalCreateDto.setEmployeeId(null);
-		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
-		mockMvc.perform(post("/proposals")
-				.accept(MediaType.APPLICATION_JSON)
-				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -235,7 +302,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -246,19 +314,9 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
-	}
-
-	@Test
-	public void createProposalShouldReturnNotFoundWhenNonExistingEmployee() throws Exception {
-		proposalCreateDto.setEmployeeId(100000L);
-		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
-		mockMvc.perform(post("/proposals")
-				.accept(MediaType.APPLICATION_JSON)
-				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isNotFound());
 	}
 
 	@Test
@@ -268,7 +326,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
@@ -279,7 +338,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
@@ -290,7 +350,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -302,17 +363,19 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
-	public void updateProposalShouldReturnProposalDataDTOWhenExistingId() throws Exception {
+	public void updateProposalShouldReturnProposalDataDTOWhenExistingIdAndRoleGestor() throws Exception {
 		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.code").value(proposalCreateDto.getCode()))
@@ -327,12 +390,45 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
+	public void updateProposalShouldReturnForbiddenWhenExistingIdAndRoleConsultorNotOwner() throws Exception {
+		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
+		mockMvc.perform(put("/proposals/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(proposalJson)
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	public void updateProposalShouldReturnProposalDataDTOWhenExistingIdAndRoleConsultorOwner() throws Exception {
+		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
+		mockMvc.perform(put("/proposals/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(proposalJson)
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + ownerConsultorToken))
+			.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void updateProposalShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
+		mockMvc.perform(put("/proposals/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(proposalJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	public void updateProposalShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
 		mockMvc.perform(put("/proposals/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
@@ -343,7 +439,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -354,7 +451,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -365,7 +463,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -376,7 +475,8 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -388,14 +488,16 @@ public class ProposalControllerIntegrationTests {
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(proposalJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
 	public void updateCancelProposalShouldReturnProposalDataDTOWhenExistingId() throws Exception {
 		mockMvc.perform(put("/proposals/{id}/cancel", existingId)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value("CANCELADA"))
 			.andExpect(jsonPath("$.payment", nullValue()));
@@ -404,17 +506,26 @@ public class ProposalControllerIntegrationTests {
 	@Test
 	public void updateCancelProposalShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(put("/proposals/{id}/cancel", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
-	public void getProposalsAsCsvShouldReturnResource() throws Exception {
+	public void getProposalsAsCsvShouldReturnResourceWhenUserLogged() throws Exception {
 		mockMvc.perform(get("/proposals/csv?dateField={field}&beginDate={begin}&endDate={end}",
-				dateField, beginDate, endDate))
+				dateField, beginDate, endDate)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
 			.andExpect(content().contentType("text/csv;charset=UTF-8"))
 			.andExpect(content().string(containsString("ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente")));
+	}
+
+	@Test
+	public void getProposalsAsCsvShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/proposals/csv?dateField={field}&beginDate={begin}&endDate={end}",
+				dateField, beginDate, endDate))
+			.andExpect(status().isUnauthorized());
 	}
 }

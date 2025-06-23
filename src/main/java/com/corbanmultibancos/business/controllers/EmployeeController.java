@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,12 +33,14 @@ public class EmployeeController {
 	@Autowired
 	private EmployeeService employeeService;
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@GetMapping("/{id}")
 	public ResponseEntity<EmployeeUserDTO> getEmployeeById(@PathVariable Long id) {
 		EmployeeUserDTO employeeDto = employeeService.getEmployeeById(id);
 		return ResponseEntity.ok(employeeDto);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@GetMapping
 	public ResponseEntity<Page<EmployeeUserDTO>> getEmployees(@RequestParam(defaultValue = "") String cpf,
 														@RequestParam(defaultValue = "") String name,
@@ -46,6 +49,7 @@ public class EmployeeController {
 		return ResponseEntity.ok(page);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@GetMapping("/csv")
 	public ResponseEntity<Resource> getEmployeesAsCsv(@RequestParam(defaultValue = "") String cpf,
 												@RequestParam(defaultValue = "") String name){
@@ -57,6 +61,7 @@ public class EmployeeController {
 				.body(resource);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@PostMapping
 	public ResponseEntity<EmployeeCreateDTO> createEmployee(@Valid @RequestBody EmployeeCreateDTO employeeDto) {
 		employeeDto = employeeService.createEmployee(employeeDto);
@@ -64,6 +69,7 @@ public class EmployeeController {
 		return ResponseEntity.created(uri).body(employeeDto);
 	}
 
+	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
 	@PutMapping("/{id}")
 	public ResponseEntity<EmployeeCreateDTO> updateEmployee(@PathVariable Long id,
 														@Valid @RequestBody EmployeeCreateDTO employeeDto) {

@@ -8,9 +8,6 @@ import jakarta.validation.constraints.NotNull;
 
 public class ProposalCreateDTO extends ProposalDTO {
 
-	@NotNull(message = "Obrigatório informar o funcionário responsável pela proposta", groups = CreateGroup.class)
-	private Long employeeId;
-
 	@NotNull(message = "Obrigatório informar o cliente da proposta", groups = CreateGroup.class)
 	private Long customerId;
 
@@ -21,19 +18,10 @@ public class ProposalCreateDTO extends ProposalDTO {
 	}
 
 	public ProposalCreateDTO(Long id, String code, Double value, LocalDate generation, LocalDate payment,
-			Long employeeId, Long customerId, Long bankId) {
+			Long customerId, Long bankId) {
 		super(id, code, value, generation, payment);
-		this.employeeId = employeeId;
 		this.customerId = customerId;
 		this.bankId = bankId;
-	}
-
-	public Long getEmployeeId() {
-		return employeeId;
-	}
-
-	public void setEmployeeId(Long employeeId) {
-		this.employeeId = employeeId;
 	}
 
 	public Long getCustomerId() {

@@ -56,6 +56,13 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 
 	private Predicate[] predicateBuilder(Map<String, Object> filter, Root<Proposal> root, CriteriaBuilder builder) {
 		List<Predicate> predicates = new ArrayList<>();
+		if(filter.containsKey("userId")) {
+			predicates.add(equalEmployeeId((Long) filter.get("userId"), root, builder));
+		}
+		if(filter.containsKey("code")) {
+			predicates.add(equalCode((String) filter.get("code"), root, builder));
+			return predicates.toArray(new Predicate[0]);
+		}
 		if (filter.containsKey("employeeName")) {
 			predicates.add(likeEmployeeName((String) filter.get("employeeName"), root, builder));
 		}
@@ -80,6 +87,14 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 	private Predicate dateBetween(String fieldName, LocalDate begin, LocalDate end, Root<Proposal> root,
 			CriteriaBuilder builder) {
 		return builder.between(root.get(fieldName), begin, end);
+	}
+
+	private Predicate equalEmployeeId(Long id, Root<Proposal> root, CriteriaBuilder builder) {
+		return builder.equal(root.get("employee").get("id"), id);
+	}
+
+	private Predicate equalCode(String code, Root<Proposal> root, CriteriaBuilder builder) {
+		return builder.equal(root.get("code"), code);
 	}
 
 	private List<Selection<?>> getSelections(Root<Proposal> proposal) {

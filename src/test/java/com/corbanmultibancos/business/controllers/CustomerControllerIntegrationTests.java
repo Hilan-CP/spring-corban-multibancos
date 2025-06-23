@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +24,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.corbanmultibancos.business.dto.CustomerDTO;
+import com.corbanmultibancos.business.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 public class CustomerControllerIntegrationTests {
+
+	private static String gestorToken;
+	private static String consultorToken;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -45,6 +50,12 @@ public class CustomerControllerIntegrationTests {
 	private String partialPhone;
 	private CustomerDTO customerDto;
 
+	@BeforeAll
+	static void setUpOnce(@Autowired MockMvc mockMvc, @Autowired TokenUtil tokenUtil) throws Exception {
+		gestorToken = tokenUtil.logInAndGetToken(mockMvc, "zenobia", "zenobia123");
+		consultorToken = tokenUtil.logInAndGetToken(mockMvc, "florinda", "florinda123");
+	}
+
 	@BeforeEach
 	void setUp() {
 		existingId = 1L;
@@ -58,9 +69,10 @@ public class CustomerControllerIntegrationTests {
 	}
 
 	@Test
-	public void getCustomerByIdShouldReturnCustomerDTOWhenExistingId() throws Exception {
+	public void getCustomerByIdShouldReturnCustomerDTOWhenExistingIdAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/customers/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.cpf").exists())
@@ -70,16 +82,38 @@ public class CustomerControllerIntegrationTests {
 	}
 
 	@Test
+	public void getCustomerByIdShouldReturnCustomerDTOWhenExistingIdAndRoleConsultor() throws Exception {
+		mockMvc.perform(get("/customers/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(existingId))
+			.andExpect(jsonPath("$.cpf").exists())
+			.andExpect(jsonPath("$.name").exists())
+			.andExpect(jsonPath("$.phone").exists())
+			.andExpect(jsonPath("$.birthDate").exists());
+	}
+
+	@Test
+	public void getCustomerByIdShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/customers/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	public void getCustomerByIdShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(get("/customers/{id}", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	public void getCustomersShouldReturnPageOfCustomerDTOWhenExistingCpf() throws Exception {
 		mockMvc.perform(get("/customers?cpf={cpf}", existingCpf)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty())
 			.andExpect(jsonPath("$.numberOfElements", is(1)));
@@ -88,7 +122,8 @@ public class CustomerControllerIntegrationTests {
 	@Test
 	public void getCustomersShouldReturnEmptyPageWhenNonExistingCpf() throws Exception {
 		mockMvc.perform(get("/customers?cpf={cpf}", nonExistingCpf)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isEmpty());
 	}
@@ -96,7 +131,8 @@ public class CustomerControllerIntegrationTests {
 	@Test
 	public void getCustomersShouldReturnPageOfCustomerDTOWhenPartialName() throws Exception {
 		mockMvc.perform(get("/customers?name={name}", partialName)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
 	}
@@ -104,54 +140,77 @@ public class CustomerControllerIntegrationTests {
 	@Test
 	public void getCustomersShouldReturnPageOfCustomerDTOWhenPartialPhone() throws Exception {
 		mockMvc.perform(get("/customers?phone={phone}", partialPhone)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
 	}
 
 	@Test
-	public void getCustomersShouldReturnPageOfCustomerDTOWhenNoParameter() throws Exception {
+	public void getCustomersShouldReturnPageOfCustomerDTOWhenNoParameterAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/customers")
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
+	}
+
+	@Test
+	public void getCustomersShouldReturnPageOfCustomerDTOWhenNoParameterAndRoleConsultor() throws Exception {
+		mockMvc.perform(get("/customers")
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content").isNotEmpty());
+	}
+
+	@Test
+	public void getCustomersShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/customers")
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
 	}
 
 	@Test
 	public void getCustomersShouldReturnBadRequestWhenAllParameters() throws Exception {
 		mockMvc.perform(get("/customers?cpf={cpf}&name={name}&phone={phone}", existingCpf, partialName, partialPhone)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	public void getCustomersShouldReturnBadRequestWhenExistingCpfAndName() throws Exception {
 		mockMvc.perform(get("/customers?cpf={cpf}&name={name}", existingCpf, partialName)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	public void getCustomersShouldReturnBadRequestWhenExistingCpfAndPhone() throws Exception {
 		mockMvc.perform(get("/customers?cpf={cpf}&phone={phone}", existingCpf, partialPhone)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	public void getCustomersShouldReturnBadRequestWhenExistingNameAndPhone() throws Exception {
 		mockMvc.perform(get("/customers?name={name}&phone={phone}", partialName, partialPhone)
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
 	}
 
 	@Test
-	public void createCustomerShouldReturnCustomerDTOWhenValidData() throws Exception {
+	public void createCustomerShouldReturnCustomerDTOWhenValidDataAndRoleGestor() throws Exception {
 		String customerJson = objectMapper.writeValueAsString(customerDto);
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.cpf").value(customerDto.getCpf()))
@@ -161,13 +220,40 @@ public class CustomerControllerIntegrationTests {
 	}
 
 	@Test
+	public void createCustomerShouldReturnCustomerDTOWhenValidDataAndRoleConsultor() throws Exception {
+		String customerJson = objectMapper.writeValueAsString(customerDto);
+		mockMvc.perform(post("/customers")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(customerJson)
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.id").exists())
+			.andExpect(jsonPath("$.cpf").value(customerDto.getCpf()))
+			.andExpect(jsonPath("$.name").value(customerDto.getName()))
+			.andExpect(jsonPath("$.phone").value(customerDto.getPhone()))
+			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate().toString()));
+	}
+
+	@Test
+	public void createCustomerShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		String customerJson = objectMapper.writeValueAsString(customerDto);
+		mockMvc.perform(post("/customers")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(customerJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	public void createCustomerShouldReturnUnprocessableEntityWhenCpfIsBlank() throws Exception {
 		customerDto.setCpf(null);
 		String customerJson = objectMapper.writeValueAsString(customerDto);
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -178,7 +264,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -189,7 +276,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -200,7 +288,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -211,7 +300,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -222,23 +312,51 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(post("/customers")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
-	public void updateCustomerShouldReturnCustomerDTOWhenExistingIdAndValidData() throws Exception {
+	public void updateCustomerShouldReturnCustomerDTOWhenExistingIdAndValidDataAndRoleGestor() throws Exception {
 		String customerJson = objectMapper.writeValueAsString(customerDto);
 		mockMvc.perform(put("/customers/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.cpf").value(customerDto.getCpf()))
 			.andExpect(jsonPath("$.name").value(customerDto.getName()))
 			.andExpect(jsonPath("$.phone").value(customerDto.getPhone()))
 			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate().toString()));
+	}
+	
+	@Test
+	public void updateCustomerShouldReturnCustomerDTOWhenExistingIdAndValidDataAndRoleConsultor() throws Exception {
+		String customerJson = objectMapper.writeValueAsString(customerDto);
+		mockMvc.perform(put("/customers/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(customerJson)
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(existingId))
+			.andExpect(jsonPath("$.cpf").value(customerDto.getCpf()))
+			.andExpect(jsonPath("$.name").value(customerDto.getName()))
+			.andExpect(jsonPath("$.phone").value(customerDto.getPhone()))
+			.andExpect(jsonPath("$.birthDate").value(customerDto.getBirthDate().toString()));
+	}
+	
+	@Test
+	public void updateCustomerShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		String customerJson = objectMapper.writeValueAsString(customerDto);
+		mockMvc.perform(put("/customers/{id}", existingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(customerJson)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
 	}
 
 	@Test
@@ -247,7 +365,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(put("/customers/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isNotFound());
 	}
 
@@ -258,7 +377,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(put("/customers/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -269,7 +389,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(put("/customers/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -280,7 +401,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(put("/customers/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -291,7 +413,8 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(put("/customers/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
@@ -302,16 +425,34 @@ public class CustomerControllerIntegrationTests {
 		mockMvc.perform(put("/customers/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(customerJson)
-				.contentType(MediaType.APPLICATION_JSON))
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
-	public void getCustomersAsCsvShouldReturnResource() throws Exception {
-		mockMvc.perform(get("/customers/csv"))
+	public void getCustomersAsCsvShouldReturnResourceWhenRoleGestor() throws Exception {
+		mockMvc.perform(get("/customers/csv")
+				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
 			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
 			.andExpect(content().contentType("text/csv;charset=UTF-8"))
 			.andExpect(content().string(containsString("ID;CPF;Nome;Telefone;Nascimento")));
+	}
+
+	@Test
+	public void getCustomersAsCsvShouldReturnResourceWhenRoleConsultor() throws Exception {
+		mockMvc.perform(get("/customers/csv")
+				.header("Authorization", "Bearer " + consultorToken))
+			.andExpect(status().isOk())
+			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
+			.andExpect(content().contentType("text/csv;charset=UTF-8"))
+			.andExpect(content().string(containsString("ID;CPF;Nome;Telefone;Nascimento")));
+	}
+
+	@Test
+	public void getCustomersAsCsvShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/customers/csv"))
+			.andExpect(status().isUnauthorized());
 	}
 }
