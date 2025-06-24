@@ -41,4 +41,5 @@ Os requisitos funcionais do sistema podem ser encontrados no <a href="./document
 - Testes unitários com JUnit 5 e Mockito
 - Testes de integração com MockMvc
 
-
+## Ambiente Postman
+Na pasta [documents](documents) há as coleções de endpoints e variáveis de ambiente do Postman para facilitar os testes manuais.
