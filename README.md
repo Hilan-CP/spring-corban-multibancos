@@ -26,7 +26,7 @@ Ambos os usuários podem exportar os resultados de buscas para arquivo de extens
 ## Diagrama de classes
 ![classes](documents/diagrama_de_classe.png)
 
-Cada proposta deve obrigatoriamente ter um funcionário responsável por sua elaboração, um cliente destinatário e um banco que realizará o empréstimo. Os funcionários podem atuar individualmente ou em equipe, sendo possível que existam equipes sem funcionários atribuídos. Bancos, clientes e funcionários podem ser cadastrados no sistema sem a necessidade de vínculo imediato com uma proposta.
+Cada proposta deve obrigatoriamente ter um funcionário responsável por sua elaboração, um cliente destinatário e um banco que realizará o empréstimo. Os funcionários podem atuar individualmente ou em equipe, sendo possível que existam equipes sem funcionários atribuídos. Bancos, clientes e funcionários podem ser cadastrados no sistema sem a necessidade de vínculo imediato com uma proposta. Cada funcionário pode ser ou não um usuário do sistema, de forma que ao sair da empresa o usuário pode ser apagado para remover o acesso ao sistema.
 
 ## Requisitos de software
 Os requisitos funcionais do sistema podem ser encontrados no <a href="./documents/requisitos de software.docx">documento de requisitos</a>.
@@ -35,5 +35,11 @@ Os requisitos funcionais do sistema podem ser encontrados no <a href="./document
 - Java
 - Spring Boot
 - Spring Data JPA
+- Bean Validation
+- Spring Security + JWT
+- Banco de dados H2
+- Testes unitários com JUnit 5 e Mockito
+- Testes de integração com MockMvc
 
-
+## Ambiente Postman
+Na pasta [documents](documents) há as coleções de endpoints e variáveis de ambiente do Postman para facilitar os testes manuais.

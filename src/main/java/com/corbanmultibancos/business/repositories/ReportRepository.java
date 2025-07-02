@@ -13,29 +13,20 @@ public interface ReportRepository extends JpaRepository<Proposal, Long> {
 
 	@Query(value = """
 			SELECT
-				report.team,
-			    report.employee,
-			    COUNT(CASE WHEN report.generation = :today THEN 1 END) AS count_day,
-			    SUM(CASE WHEN report.generation = :today AND report.status = 'GERADA' THEN report.raw_value ELSE 0 END) AS generated_day,
-			    SUM(CASE WHEN report.generation = :today AND report.status = 'CONTRATADA' THEN report.raw_value ELSE 0 END) AS paid_day,
-			    SUM(CASE WHEN report.status = 'CONTRATADA' THEN report.raw_value ELSE 0 END) AS paid_month
-			FROM (
-			    SELECT 
-			        proposal.id,
-			        proposal.raw_value,
-			        proposal.status,
-			        proposal.generation,
-			        proposal.payment,
-			        employee.name AS employee,
-			        team.name AS team
-			    FROM tb_proposal AS proposal
-			    INNER JOIN tb_employee AS employee ON proposal.employee_id = employee.id
-			    LEFT JOIN tb_team AS team ON employee.team_id = team.id
-			    WHERE proposal.generation BETWEEN :begin AND :end
-			    	AND team.id IN :teams
-			) AS report
-			GROUP BY report.employee, report.team
-			""",
-			nativeQuery = true)
+		    NEW com.corbanmultibancos.business.dto.ReportItemDTO(
+		        team.name,
+		        employee.name,
+		        COUNT(CASE WHEN proposal.generation = :today THEN 1 END) AS countDay,
+		        SUM(CASE WHEN proposal.generation = :today AND proposal.status = 'GERADA' THEN proposal.rawValue ELSE 0 END) AS generatedDay,
+		        SUM(CASE WHEN proposal.generation = :today AND proposal.status = 'CONTRATADA' THEN proposal.rawValue ELSE 0 END) AS paidDay,
+		        SUM(CASE WHEN proposal.status = 'CONTRATADA' THEN proposal.rawValue ELSE 0 END) AS paidMonth
+		    )
+			FROM Proposal proposal
+			JOIN proposal.employee employee
+			LEFT JOIN employee.team team
+			WHERE proposal.generation BETWEEN :begin AND :end
+			    AND team.id IN :teams
+			GROUP BY employee.name, team.name
+			""")
 	List<ReportItemDTO> findReportByDates(LocalDate begin, LocalDate end, LocalDate today, List<Long> teams);
 }

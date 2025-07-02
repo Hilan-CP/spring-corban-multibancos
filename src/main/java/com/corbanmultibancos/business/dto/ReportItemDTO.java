@@ -1,6 +1,7 @@
 package com.corbanmultibancos.business.dto;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class ReportItemDTO {
 
@@ -22,6 +23,16 @@ public class ReportItemDTO {
 		this.sumGeneratedDay = sumGeneratedDay;
 		this.sumPaidDay = sumPaidDay;
 		this.sumPaidMonth = sumPaidMonth;
+	}
+	
+	public ReportItemDTO(String team, String employee, Long count, Double sumGeneratedDay, Double sumPaidDay,
+			Double sumPaidMonth) {
+		this.team = team;
+		this.employee = employee;
+		this.count = count;
+		this.sumGeneratedDay = BigDecimal.valueOf(sumGeneratedDay).setScale(2, RoundingMode.HALF_EVEN);
+		this.sumPaidDay = BigDecimal.valueOf(sumPaidDay).setScale(2, RoundingMode.HALF_EVEN);
+		this.sumPaidMonth = BigDecimal.valueOf(sumPaidMonth).setScale(2, RoundingMode.HALF_EVEN);
 	}
 
 	public String getTeam() {

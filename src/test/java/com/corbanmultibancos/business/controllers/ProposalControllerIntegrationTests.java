@@ -18,18 +18,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.corbanmultibancos.business.config.ClockConfig;
 import com.corbanmultibancos.business.dto.ProposalCreateDTO;
+import com.corbanmultibancos.business.util.DateUtil;
 import com.corbanmultibancos.business.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@Import(ClockConfig.class)
 public class ProposalControllerIntegrationTests {
 
 	private static String gestorToken;
@@ -41,6 +45,9 @@ public class ProposalControllerIntegrationTests {
 
 	@Autowired
 	private ObjectMapper objectMapper;
+	
+	@Autowired
+	private DateUtil dateUtil;
 
 	private Long existingId;
 	private Long nonExistingId;
@@ -69,8 +76,8 @@ public class ProposalControllerIntegrationTests {
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateField = "generation";
-		beginDate = LocalDate.of(2025, 1, 1);
-		endDate = LocalDate.now();
+		beginDate = dateUtil.getDateOfFirstDayOfMonth();
+		endDate = dateUtil.getDateOfLastDayOfMonth();
 		proposalCreateDto = new ProposalCreateDTO(null, "123", 100.0, LocalDate.now(), null, 1L, 1L);
 	}
 
