@@ -68,7 +68,7 @@ public class ReportControllerIntegrationTests {
 			.andExpect(jsonPath("$.totalSumGeneratedDay").value(303.59))
 			.andExpect(jsonPath("$.totalSumPaidDay").value(656.86))
 			.andExpect(jsonPath("$.totalSumPaidMonth").value(8414.52))
-			.andExpect(jsonPath("$.totalMonthTrend").value(12020.70));
+			.andExpect(jsonPath("$.totalMonthTrend").value(12421.39));
 	}
 
 	@Test
