@@ -78,7 +78,7 @@ public class UserServiceTests {
 		userEntity = new User(existingId, existingUsername, "senha123", employee, role);
 		userPage = new PageImpl<>(List.of(userEntity));
 		pageable = PageRequest.of(0, 10);
-		userCreateDto = new UserCreateDTO(9L, "novo", "novo123", 1L);
+		userCreateDto = new UserCreateDTO(existingId, "novo", "novo123", 1L);
 		Mockito.when(userRepository.findById(existingId)).thenReturn(Optional.of(userEntity));
 		Mockito.when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(userRepository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
@@ -92,11 +92,9 @@ public class UserServiceTests {
 		Mockito.doNothing().when(userRepository).deleteById(existingId);
 		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
 		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(employeeRepository.getReferenceById(existingId)).thenReturn(employee);
-		Mockito.when(employeeRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Mockito.when(employeeRepository.save(any())).thenReturn(employee);
-		Mockito.when(roleRepository.getReferenceById(existingRoleId)).thenReturn(role);
-		Mockito.when(roleRepository.getReferenceById(nonExistingRoleId)).thenThrow(EntityNotFoundException.class);
+		Mockito.when(roleRepository.findById(existingRoleId)).thenReturn(Optional.of(role));
+		Mockito.when(roleRepository.findById(nonExistingRoleId)).thenReturn(Optional.empty());
 	}
 
 	@Test
@@ -143,6 +141,12 @@ public class UserServiceTests {
 	@Test
 	public void createUserShouldThrowResourceNotFoundExceptionWhenNonExistingEmployee() {
 		userCreateDto.setEmployeeId(nonExistingId);
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.createUser(userCreateDto));
+	}
+
+	@Test
+	public void createUserShouldThrowResourceNotFoundExceptionWhenNonExistingRole() {
+		userCreateDto.setRoleId(nonExistingRoleId);
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.createUser(userCreateDto));
 	}
 

@@ -218,6 +218,15 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
+	public void getProposalsShouldReturnBadRequestWhenBeginDateIsAfterEndDate() throws Exception {
+		mockMvc.perform(get("/proposals?dateField={field}&beginDate={begin}&endDate={end}",
+				"cancel", endDate.plusDays(1L), endDate)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
 	public void getProposalsShouldReturnBadRequestWhenBankCodeAndEmployeeNameNotNull() throws Exception {
 		mockMvc.perform(get("/proposals?bankCode={bankCode}&employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
 				bankCode, partialEmployeeName, dateField, beginDate, endDate)

@@ -173,7 +173,7 @@ public class ProposalServiceTests {
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenBeginDateIsAfterEndDate() {
 		Assertions.assertThrows(IllegalParameterException.class,
-				() -> proposalService.getProposals("", "", bankCode, "invalid field name", endDate.plusDays(1L), endDate, pageable));
+				() -> proposalService.getProposals("", "", bankCode, "generation", endDate.plusDays(1L), endDate, pageable));
 	}
 
 	@Test

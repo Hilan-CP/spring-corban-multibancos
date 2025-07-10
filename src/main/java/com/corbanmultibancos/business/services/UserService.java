@@ -106,20 +106,11 @@ public class UserService {
 	}
 
 	private void setEmployeeAndRole(User user, Long employeeId, Long roleId) {
-		try {
-			Employee employee = employeeRepository.getReferenceById(employeeId);
-			user.setEmployee(employee);
-		}
-		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND);
-		}
-		
-		try {
-			Role role = roleRepository.getReferenceById(roleId);
-			user.setRole(role);
-		}
-		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(ErrorMessage.ROLE_NOT_FOUND);
-		}
+		Employee employee = employeeRepository.findById(employeeId)
+				.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.EMPLOYEE_NOT_FOUND));
+		user.setEmployee(employee);
+		Role role = roleRepository.findById(roleId)
+				.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.ROLE_NOT_FOUND));
+		user.setRole(role);
 	}
 }

@@ -229,6 +229,18 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	public void createUserShouldReturnNotFoundWhenNonExistingRole() throws Exception {
+		userCreateDto.setRoleId(1000L);
+		String userJson = objectMapper.writeValueAsString(userCreateDto);
+		mockMvc.perform(post("/users")
+				.accept(MediaType.APPLICATION_JSON)
+				.content(userJson)
+				.contentType(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
 	public void createUserShouldReturnUnprocessableEntityWhenUniqueEmployeeIdViolation() throws Exception {
 		userCreateDto.setEmployeeId(existingId);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);

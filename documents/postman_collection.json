@@ -183,7 +183,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"code\":555,\r\n    \"name\":\"Banco Teste\"\r\n}",
+							"raw": "{\r\n    \"code\":556,\r\n    \"name\":\"Banco Teste\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -429,11 +429,21 @@
 				{
 					"name": "updateCustomer",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"cpf\":\"01234567890\",\r\n    \"name\":\"Silvia da Silva\",\r\n    \"phone\":\"44987654321\",\r\n    \"birthDate\":\"2000-01-01\"\r\n}",
+							"raw": "{\r\n    \"cpf\":\"00000000353\",\r\n    \"name\":\"Silvia da Silva\",\r\n    \"phone\":\"44987654321\",\r\n    \"birthDate\":\"2000-01-01\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -886,7 +896,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"cpf\":\"01234567890\",\r\n    \"name\":\"Silvia da Silva\",\r\n    \"teamId\":1\r\n}",
+							"raw": "{\r\n    \"cpf\":\"00000000353\",\r\n    \"name\":\"Silvia da Silva\",\r\n    \"teamId\":1\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1205,7 +1215,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-06-30",
+							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30",
 							"host": [
 								"{{host}}"
 							],
@@ -1223,7 +1233,7 @@
 								},
 								{
 									"key": "endDate",
-									"value": "2025-06-30"
+									"value": "2025-07-30"
 								}
 							]
 						}
@@ -1246,7 +1256,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-06-30&bankCode=623",
+							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30&bankCode=623",
 							"host": [
 								"{{host}}"
 							],
@@ -1264,7 +1274,7 @@
 								},
 								{
 									"key": "endDate",
-									"value": "2025-06-30"
+									"value": "2025-07-30"
 								},
 								{
 									"key": "bankCode",
@@ -1291,7 +1301,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-06-30&employeeName=jo",
+							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30&employeeName=jo",
 							"host": [
 								"{{host}}"
 							],
@@ -1309,7 +1319,7 @@
 								},
 								{
 									"key": "endDate",
-									"value": "2025-06-30"
+									"value": "2025-07-30"
 								},
 								{
 									"key": "employeeName",
@@ -1336,7 +1346,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-06-30&code=993",
+							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30&code=993",
 							"host": [
 								"{{host}}"
 							],
@@ -1354,7 +1364,7 @@
 								},
 								{
 									"key": "endDate",
-									"value": "2025-06-30"
+									"value": "2025-07-30"
 								},
 								{
 									"key": "code",
@@ -1483,7 +1493,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/proposals/csv?dateField=generation&beginDate=2025-01-01&endDate=2025-06-30",
+							"raw": "{{host}}/proposals/csv?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30",
 							"host": [
 								"{{host}}"
 							],
@@ -1502,7 +1512,7 @@
 								},
 								{
 									"key": "endDate",
-									"value": "2025-06-30"
+									"value": "2025-07-30"
 								}
 							]
 						}
