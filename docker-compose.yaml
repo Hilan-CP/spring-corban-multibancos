@@ -4,17 +4,23 @@ services:
     container_name: backend
     ports:
       - "8080:8080"
-    environment:
-      DB_USER: postgres
-      DB_PASSWORD: "654321"
+    env_file:
+      - ./.env
     depends_on:
       - database
+    networks:
+      - dev
+
   database:
     image: postgres
     container_name: database
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "654321"
-      POSTGRES_DB: corban
+    env_file:
+      - ./.env
+    networks:
+      - dev
+
+networks:
+  dev:
+    driver: bridge
