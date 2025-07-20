@@ -3,13 +3,13 @@ package com.corbanmultibancos.business.repositories;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.corbanmultibancos.business.dto.ProposalDataDTO;
+import com.corbanmultibancos.business.dto.ProposalFilterDTO;
 import com.corbanmultibancos.business.entities.Proposal;
 
 import jakarta.persistence.EntityManager;
@@ -27,7 +27,7 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 	private EntityManager entityManager;
 
 	@Override
-	public Page<ProposalDataDTO> findBy(Map<String, Object> filter, Pageable pageable) {
+	public Page<ProposalDataDTO> findByFilter(ProposalFilterDTO filter, Pageable pageable) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<ProposalDataDTO> criteria = builder.createQuery(ProposalDataDTO.class);
 		Root<Proposal> root = criteria.from(Proposal.class);
@@ -45,7 +45,7 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 		return new PageImpl<>(result, pageable, count);
 	}
 
-	private Long countQuery(Map<String, Object> filter) {
+	private Long countQuery(ProposalFilterDTO filter) {
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> query = builder.createQuery(Long.class);
 		Root<Proposal> proposal = query.from(Proposal.class);
@@ -54,25 +54,18 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 		return entityManager.createQuery(query).getSingleResult();
 	}
 
-	private Predicate[] predicateBuilder(Map<String, Object> filter, Root<Proposal> root, CriteriaBuilder builder) {
+	private Predicate[] predicateBuilder(ProposalFilterDTO filter, Root<Proposal> root, CriteriaBuilder builder) {
 		List<Predicate> predicates = new ArrayList<>();
-		if(filter.containsKey("userId")) {
-			predicates.add(equalEmployeeId((Long) filter.get("userId"), root, builder));
+		if (filter.getUserId() != null) {
+			predicates.add(equalEmployeeId(filter.getUserId(), root, builder));
 		}
-		if(filter.containsKey("code")) {
-			predicates.add(equalCode((String) filter.get("code"), root, builder));
-			return predicates.toArray(new Predicate[0]);
+		if (!filter.getEmployeeName().isBlank()) {
+			predicates.add(likeEmployeeName(filter.getEmployeeName(), root, builder));
 		}
-		if (filter.containsKey("employeeName")) {
-			predicates.add(likeEmployeeName((String) filter.get("employeeName"), root, builder));
+		if (filter.getBankCode() != null) {
+			predicates.add(equalBankCode(filter.getBankCode(), root, builder));
 		}
-		else if (filter.containsKey("bankCode")) {
-			predicates.add(equalBankCode((Integer) filter.get("bankCode"), root, builder));
-		}
-		predicates.add(dateBetween((String) filter.get("dateField"),
-				(LocalDate) filter.get("beginDate"),
-				(LocalDate) filter.get("endDate"),
-				root, builder));
+		predicates.add(dateBetween(filter.getDateField(), filter.getBeginDate(), filter.getEndDate(), root, builder));
 		return predicates.toArray(new Predicate[0]);
 	}
 
@@ -93,22 +86,18 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 		return builder.equal(root.get("employee").get("id"), id);
 	}
 
-	private Predicate equalCode(String code, Root<Proposal> root, CriteriaBuilder builder) {
-		return builder.equal(root.get("code"), code);
-	}
-
 	private List<Selection<?>> getSelections(Root<Proposal> proposal) {
 		List<Selection<?>> selections = List.of(
-				proposal.get("id").alias("id"),
-				proposal.get("code").alias("code"),
-				proposal.get("rawValue").alias("rawValue"),
-				proposal.get("generation").alias("generation"),
-				proposal.get("payment").alias("payment"),
-				proposal.get("status").alias("status"),
-				proposal.get("employee").get("name").alias("employeeName"),
-				proposal.get("bank").get("name").alias("bankName"),
-				proposal.get("customer").get("cpf").alias("customerCpf"),
-				proposal.get("customer").get("name").alias("customerName"));
+				proposal.get("id"),
+				proposal.get("code"),
+				proposal.get("rawValue"),
+				proposal.get("generation"),
+				proposal.get("payment"),
+				proposal.get("status"),
+				proposal.get("employee").get("name"),
+				proposal.get("bank").get("name"),
+				proposal.get("customer").get("cpf"),
+				proposal.get("customer").get("name"));
 		return selections;
 	}
 }

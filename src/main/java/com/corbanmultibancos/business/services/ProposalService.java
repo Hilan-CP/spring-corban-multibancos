@@ -1,8 +1,6 @@
 package com.corbanmultibancos.business.services;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corbanmultibancos.business.dto.ProposalCreateDTO;
 import com.corbanmultibancos.business.dto.ProposalDataDTO;
+import com.corbanmultibancos.business.dto.ProposalFilterDTO;
 import com.corbanmultibancos.business.entities.Bank;
 import com.corbanmultibancos.business.entities.Customer;
 import com.corbanmultibancos.business.entities.Employee;
@@ -56,34 +55,29 @@ public class ProposalService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ProposalDataDTO> getProposals(String code, String employeeName, Integer bankCode, String dateFieldName,
+	public ProposalDataDTO getProposalByCode(String code) {
+		Optional<Proposal> result = proposalRepository.findByCode(code);
+		Proposal proposal = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROPOSAL_NOT_FOUND));
+		authorizationService.authorizeAdminOrOwner(proposal.getEmployee().getId());
+		return ProposalMapper.toProposalDataDto(proposal);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<ProposalDataDTO> getProposals(String employeeName, Integer bankCode, String dateFieldName,
 			LocalDate beginDate, LocalDate endDate, Pageable pageable) {
-		validateParameters(code, employeeName, bankCode, dateFieldName, beginDate, endDate);
+		validateParameters(employeeName, bankCode, dateFieldName, beginDate, endDate);
 		User user = authorizationService.getLoggedUser();
-		Page<ProposalDataDTO> page;
-		Map<String, Object> filter = new HashMap<>();
-		filter.put("dateField", dateFieldName);
-		filter.put("beginDate", beginDate);
-		filter.put("endDate", endDate);
+		ProposalFilterDTO filter = new ProposalFilterDTO(employeeName, bankCode, beginDate, endDate, dateFieldName, null);
 		if(!authorizationService.isAdmin(user)) {
-			filter.put("userId", user.getId());
+			filter.setUserId(user.getId());
 		}
-		if(!code.isBlank()) {
-			filter.put("code", code);
-		}
-		if(!employeeName.isBlank()) {
-			filter.put("employeeName", employeeName);
-		}
-		if(bankCode != null && bankCode != 0) {
-			filter.put("bankCode", bankCode);
-		}
-		page = proposalRepository.findBy(filter, pageable);
+		Page<ProposalDataDTO> page = proposalRepository.findByFilter(filter, pageable);
 		return page;
 	}
 
 	public byte[] getProposalsAsCsvData(String code, String employeeName, Integer bankCode, String dateField,
 			LocalDate beginDate, LocalDate endDate) {
-		Page<ProposalDataDTO> result = getProposals(code, employeeName, bankCode, dateField, beginDate, endDate, Pageable.unpaged());
+		Page<ProposalDataDTO> result = getProposals(employeeName, bankCode, dateField, beginDate, endDate, Pageable.unpaged());
 		return exporterService.writeProposalsAsBytes(result.getContent());
 	}
 
@@ -127,12 +121,9 @@ public class ProposalService {
 		}
 	}
 
-	private void validateParameters(String code, String employeeName, Integer bankCode, String dateFieldName,
+	private void validateParameters(String employeeName, Integer bankCode, String dateFieldName,
 			LocalDate beginDate, LocalDate endDate) {
 		int optionalParams = 0;
-		if(!code.isBlank()) {
-			optionalParams++;
-		}
 		if(!employeeName.isBlank()) {
 			optionalParams++;
 		}

@@ -45,14 +45,14 @@ public class ProposalControllerIntegrationTests {
 
 	@Autowired
 	private ObjectMapper objectMapper;
-	
+
 	@Autowired
 	private DateUtil dateUtil;
 
 	private Long existingId;
 	private Long nonExistingId;
-	private String existingCode;
-	private String otherCode;
+	private String existingProposalCode;
+	private String otherProposalCode;
 	private String partialEmployeeName;
 	private Integer bankCode;
 	private String dateField;
@@ -71,8 +71,8 @@ public class ProposalControllerIntegrationTests {
 	void setUp() {
 		existingId = 1L;
 		nonExistingId = 10000L;
-		existingCode = "993";
-		otherCode = "1430";
+		existingProposalCode = "993";
+		otherProposalCode = "1430";
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateField = "generation";
@@ -106,7 +106,7 @@ public class ProposalControllerIntegrationTests {
 				.header("Authorization", "Bearer " + consultorToken))
 			.andExpect(status().isForbidden());
 	}
-	
+
 	@Test
 	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingIdAndRoleConsultorOwner() throws Exception {
 		mockMvc.perform(get("/proposals/{id}", existingId)
@@ -114,7 +114,7 @@ public class ProposalControllerIntegrationTests {
 				.header("Authorization", "Bearer " + ownerConsultorToken))
 			.andExpect(status().isOk());
 	}
-	
+
 	@Test
 	public void getProposalByIdShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
 		mockMvc.perform(get("/proposals/{id}", existingId)
@@ -131,24 +131,52 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
-	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCodeAndRoleGestor() throws Exception {
-		mockMvc.perform(get("/proposals?code={code}&dateField={field}&beginDate={begin}&endDate={end}",
-				existingCode, dateField, beginDate, endDate)
+	public void getProposalByCodeShouldReturnProposalDataDTOWhenExistingProposalCodeAndRoleGestor() throws Exception {
+		mockMvc.perform(get("/proposals/code/{code}", existingProposalCode)
 				.accept(MediaType.APPLICATION_JSON)
 				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.content").isNotEmpty())
-			.andExpect(jsonPath("$.numberOfElements").value(1));
+			.andExpect(jsonPath("$.id").value(existingId))
+			.andExpect(jsonPath("$.code").exists())
+			.andExpect(jsonPath("$.value").exists())
+			.andExpect(jsonPath("$.generation").exists())
+			.andExpect(jsonPath("$.payment").hasJsonPath())
+			.andExpect(jsonPath("$.status").exists())
+			.andExpect(jsonPath("$.employeeName").exists())
+			.andExpect(jsonPath("$.bankName").exists())
+			.andExpect(jsonPath("$.customerCpf").exists())
+			.andExpect(jsonPath("$.customerName").exists());
 	}
 
 	@Test
-	public void getProposalsShouldReturnEmptyPageWhenExistingCodeAndRoleConsultorNotOwner() throws Exception {
-		mockMvc.perform(get("/proposals?code={code}&dateField={field}&beginDate={begin}&endDate={end}",
-				existingCode, dateField, beginDate, endDate)
+	public void getProposalByCodeShouldReturnForbiddenWhenExistingProposalCodeAndRoleConsultorNotOwner() throws Exception {
+		mockMvc.perform(get("/proposals/code/{code}", existingProposalCode)
 				.accept(MediaType.APPLICATION_JSON)
 				.header("Authorization", "Bearer " + consultorToken))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.content").isEmpty());
+			.andExpect(status().isForbidden());
+	}
+	
+	@Test
+	public void getProposalByCodeShouldReturnProposalDataDTOWhenExistingProposalCodeAndRoleConsultorOwner() throws Exception {
+		mockMvc.perform(get("/proposals/code/{code}", existingProposalCode)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + ownerConsultorToken))
+			.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void getProposalByCodeShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+		mockMvc.perform(get("/proposals/code/{code}", existingProposalCode)
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	public void getProposalByCodeShouldReturnNotFoundWhenNonExistingId() throws Exception {
+		mockMvc.perform(get("/proposals/code/{code}", nonExistingId)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", "Bearer " + gestorToken))
+			.andExpect(status().isNotFound());
 	}
 
 	@Test
@@ -227,18 +255,9 @@ public class ProposalControllerIntegrationTests {
 	}
 
 	@Test
-	public void getProposalsShouldReturnBadRequestWhenBankCodeAndEmployeeNameNotNull() throws Exception {
-		mockMvc.perform(get("/proposals?bankCode={bankCode}&employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
-				bankCode, partialEmployeeName, dateField, beginDate, endDate)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
-			.andExpect(status().isBadRequest());
-	}
-
-	@Test
 	public void getProposalsShouldReturnBadRequestWhenAllParamters() throws Exception {
-		mockMvc.perform(get("/proposals?code={code}&bankCode={bankCode}&employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
-				existingCode, bankCode, partialEmployeeName, dateField, beginDate, endDate)
+		mockMvc.perform(get("/proposals?bankCode={bankCode}&employeeName={employeeName}&dateField={field}&beginDate={begin}&endDate={end}",
+				existingProposalCode, bankCode, partialEmployeeName, dateField, beginDate, endDate)
 				.accept(MediaType.APPLICATION_JSON)
 				.header("Authorization", "Bearer " + gestorToken))
 			.andExpect(status().isBadRequest());
@@ -361,7 +380,7 @@ public class ProposalControllerIntegrationTests {
 
 	@Test
 	public void createProposalShouldReturnUnprocessableEntityWhenUniqueCodeViolation() throws Exception {
-		proposalCreateDto.setCode(otherCode);
+		proposalCreateDto.setCode(otherProposalCode);
 		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
 		mockMvc.perform(post("/proposals")
 				.accept(MediaType.APPLICATION_JSON)
@@ -486,7 +505,7 @@ public class ProposalControllerIntegrationTests {
 
 	@Test
 	public void updateProposalShouldReturnUnprocessableEntityWhenUniqueCodeViolation() throws Exception {
-		proposalCreateDto.setCode(otherCode);
+		proposalCreateDto.setCode(otherProposalCode);
 		String proposalJson = objectMapper.writeValueAsString(proposalCreateDto);
 		mockMvc.perform(put("/proposals/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
