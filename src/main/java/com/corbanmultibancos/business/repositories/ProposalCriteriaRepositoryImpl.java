@@ -17,6 +17,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
@@ -33,6 +35,7 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 		Root<Proposal> root = criteria.from(Proposal.class);
 		criteria.multiselect(getSelections(root));
 		criteria.where(predicateBuilder(filter, root, builder));
+		criteria.orderBy(convertPageableSortToCriteriaOrder(builder, root, pageable));
 
 		TypedQuery<ProposalDataDTO> query = entityManager.createQuery(criteria);
 		Long count = 0L;
@@ -99,5 +102,30 @@ public class ProposalCriteriaRepositoryImpl implements ProposalCriteriaRepositor
 				proposal.get("customer").get("cpf"),
 				proposal.get("customer").get("name"));
 		return selections;
+	}
+
+	private List<Order> convertPageableSortToCriteriaOrder(CriteriaBuilder builder, Root<Proposal> proposal, Pageable pageable){
+		List<Order> criteriaOrder = new ArrayList<>();
+		if(pageable.getSort().isSorted()) {
+			pageable.getSort().get().forEach(order -> {
+				//obtem campos separados por ponto, ex: bank.name - employee.team.name
+				String[] fields = order.getProperty().split("\\.");
+				
+				//obtem um campo da entidade principal
+				Path<Object> path = proposal.get(fields[0]);
+				
+				//obtem campos dos relacionamentos, caso existam
+				for(int i = 1; i < fields.length; ++i) { 
+					path = path.get(fields[i]);
+				}
+				if(order.isAscending()) {
+					criteriaOrder.add(builder.asc(path));
+				}
+				else {
+					criteriaOrder.add(builder.desc(path));
+				}
+			});
+		}
+		return criteriaOrder;
 	}
 }
