@@ -1241,6 +1241,51 @@
 					"response": []
 				},
 				{
+					"name": "getProposals order by bank name",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30&sort=bank.name,desc",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"proposals"
+							],
+							"query": [
+								{
+									"key": "dateField",
+									"value": "generation"
+								},
+								{
+									"key": "beginDate",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-07-30"
+								},
+								{
+									"key": "sort",
+									"value": "bank.name,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "getProposalsByBankCode",
 					"request": {
 						"auth": {
@@ -1346,30 +1391,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/proposals?dateField=generation&beginDate=2025-01-01&endDate=2025-07-30&code=993",
+							"raw": "{{host}}/proposals/code/993",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
-								"proposals"
-							],
-							"query": [
-								{
-									"key": "dateField",
-									"value": "generation"
-								},
-								{
-									"key": "beginDate",
-									"value": "2025-01-01"
-								},
-								{
-									"key": "endDate",
-									"value": "2025-07-30"
-								},
-								{
-									"key": "code",
-									"value": "993"
-								}
+								"proposals",
+								"code",
+								"993"
 							]
 						}
 					},

@@ -41,15 +41,21 @@ public class ProposalController {
 		return ResponseEntity.ok(proposalDataDto);
 	}
 
+	@GetMapping("/code/{code}")
+	public ResponseEntity<ProposalDataDTO> getProposalById(@PathVariable String code){
+		ProposalDataDTO proposalDataDto = proposalService.getProposalByCode(code);
+		return ResponseEntity.ok(proposalDataDto);
+	}
+
 	@GetMapping
-	public ResponseEntity<Page<ProposalDataDTO>> getProposals(@RequestParam(defaultValue = "") String code,
+	public ResponseEntity<Page<ProposalDataDTO>> getProposals(
 			@RequestParam(defaultValue = "") String employeeName,
 			@RequestParam(defaultValue = "") Integer bankCode,
 			@RequestParam(required = true) String dateField,
 			@RequestParam(required = true) LocalDate beginDate,
 			@RequestParam(required = true) LocalDate endDate,
 			Pageable pageable){
-		Page<ProposalDataDTO> page = proposalService.getProposals(code, employeeName, bankCode, dateField, beginDate, endDate, pageable);
+		Page<ProposalDataDTO> page = proposalService.getProposals(employeeName, bankCode, dateField, beginDate, endDate, pageable);
 		return ResponseEntity.ok(page);
 	}
 

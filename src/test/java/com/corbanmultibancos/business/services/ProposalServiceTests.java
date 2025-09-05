@@ -2,7 +2,6 @@ package com.corbanmultibancos.business.services;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyMap;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,17 +52,18 @@ public class ProposalServiceTests {
 
 	@Mock
 	private BankRepository bankRepository;
-	
+
 	@Mock
 	private ProposalCsvExporterService exporterService;
-	
+
 	@Mock
 	private AuthorizationService authorizationService;
 
 	private Long existingId;
 	private Long nonExistingId;
 	private Long employeeId;
-	private String existingCode;
+	private String existingProposalCode;
+	private String nonExistingProposalCode;
 	private String partialEmployeeName;
 	private Integer bankCode;
 	private String dateFieldName;
@@ -83,7 +83,8 @@ public class ProposalServiceTests {
 		existingId = 1L;
 		nonExistingId = 1000L;
 		employeeId = 1L;
-		existingCode = "993";
+		existingProposalCode = "993";
+		nonExistingProposalCode = "0123456789";
 		partialEmployeeName = "jo";
 		bankCode = 623;
 		dateFieldName = "generation";
@@ -93,17 +94,19 @@ public class ProposalServiceTests {
 		user = new User(employeeId, "jose", "password123", employee, new Role(1L, "GESTOR"));
 		bank = new Bank(existingId, bankCode, "PAN");
 		customer = new Customer(existingId, "00066098645", "Sergio", "44987654321", LocalDate.now());
-		proposalEntity = new Proposal(existingId, existingCode, 1000.0, beginDate, endDate, ProposalStatus.CONTRATADA,
+		proposalEntity = new Proposal(existingId, existingProposalCode, 1000.0, beginDate, endDate, ProposalStatus.CONTRATADA,
 				employee, customer, bank);
 		proposalDtoPage = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
 		proposalCreateDto = new ProposalCreateDTO(null, "123ABC", 100.0, beginDate, endDate, customer.getId(), bank.getId());
 		pageable = PageRequest.of(0, 10);
 		Mockito.when(proposalRepository.findById(existingId)).thenReturn(Optional.of(proposalEntity));
 		Mockito.when(proposalRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+		Mockito.when(proposalRepository.findByCode(existingProposalCode)).thenReturn(Optional.of(proposalEntity));
+		Mockito.when(proposalRepository.findByCode(nonExistingProposalCode)).thenReturn(Optional.empty());
 		Mockito.when(proposalRepository.getReferenceById(existingId)).thenReturn(proposalEntity);
 		Mockito.when(proposalRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Mockito.when(proposalRepository.save(any())).thenReturn(proposalEntity);
-		Mockito.when(proposalRepository.findBy(anyMap(), any(Pageable.class))).thenReturn(proposalDtoPage);
+		Mockito.when(proposalRepository.findByFilter(any(), any(Pageable.class))).thenReturn(proposalDtoPage);
 		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
 		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
@@ -125,29 +128,40 @@ public class ProposalServiceTests {
 	}
 
 	@Test
+	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingProposalCode() {
+		ProposalDataDTO proposalDto = proposalService.getProposalByCode(existingProposalCode);
+		Assertions.assertEquals(existingId, proposalDto.getId());
+	}
+
+	@Test
+	public void getProposalByIdShouldThrowResourceNotFoundExceptionWhenNonExistingProposalCode() {
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.getProposalByCode(nonExistingProposalCode));
+	}
+
+	@Test
 	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCode() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(existingCode, "", 0, dateFieldName, beginDate,
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", 0, dateFieldName, beginDate,
 				endDate, pageable);
 		Assertions.assertEquals(1, dtoPage.getSize());
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndBankCodeNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", bankCode, dateFieldName, beginDate,
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", bankCode, dateFieldName, beginDate,
 				endDate, pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndEmployeeNameNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", partialEmployeeName, 0, dateFieldName,
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(partialEmployeeName, 0, dateFieldName,
 				beginDate, endDate, pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateNotNull() {
-		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", "", 0, dateFieldName, beginDate, endDate,
+		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", 0, dateFieldName, beginDate, endDate,
 				pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
 	}
@@ -155,25 +169,25 @@ public class ProposalServiceTests {
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenBankCodeAndEmployeNameNotNull() {
 		Assertions.assertThrows(IllegalParameterException.class,
-				() -> proposalService.getProposals("", partialEmployeeName, bankCode, dateFieldName, beginDate, endDate, pageable));
+				() -> proposalService.getProposals(partialEmployeeName, bankCode, dateFieldName, beginDate, endDate, pageable));
 	}
 
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenDateIsNull() {
 		Assertions.assertThrows(IllegalParameterException.class,
-				() -> proposalService.getProposals("", "", bankCode, dateFieldName, null, null, pageable));
+				() -> proposalService.getProposals("", bankCode, dateFieldName, null, null, pageable));
 	}
 
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenInvalidDateField() {
 		Assertions.assertThrows(IllegalParameterException.class,
-				() -> proposalService.getProposals("", "", bankCode, "invalid field name", beginDate, endDate, pageable));
+				() -> proposalService.getProposals("", bankCode, "invalid field name", beginDate, endDate, pageable));
 	}
 	
 	@Test
 	public void getProposalsShouldReturnIllegalParameterExceptionWhenBeginDateIsAfterEndDate() {
 		Assertions.assertThrows(IllegalParameterException.class,
-				() -> proposalService.getProposals("", "", bankCode, "generation", endDate.plusDays(1L), endDate, pageable));
+				() -> proposalService.getProposals("", bankCode, "generation", endDate.plusDays(1L), endDate, pageable));
 	}
 
 	@Test
@@ -227,7 +241,7 @@ public class ProposalServiceTests {
 		String data = String.join("\n", "ID;Código;Valor;Data_Geração;Data_Pagamento;Status;Funcionário;Banco;CPF_Cliente;Nome_Cliente",
 				"1;993;1000.0;2025-06-01;2025-06-01;CONTRATADA;Jose;PAN;00066098645;Sergio");
 		ProposalService serviceSpy = Mockito.spy(proposalService);
-		Mockito.doReturn(page).when(serviceSpy).getProposals("", "", 0, dateFieldName, beginDate, endDate, Pageable.unpaged());
+		Mockito.doReturn(page).when(serviceSpy).getProposals("", 0, dateFieldName, beginDate, endDate, Pageable.unpaged());
 		Mockito.doReturn(data.getBytes()).when(exporterService).writeProposalsAsBytes(anyList());
 		byte[] csvData = serviceSpy.getProposalsAsCsvData("", "", 0, dateFieldName, beginDate, endDate);
 		Assertions.assertEquals(data, new String(csvData));
