@@ -31,6 +31,8 @@ import com.nimbusds.jose.proc.SecurityContext;
 public class SecurityConfig {
 	private static final String H2_CONSOLE = "/h2-console/**";
 	private static final String LOGIN = "/login";
+    private static final String SWAGGER_UI = "/swagger-ui/**";
+    private static final String API_DOCS = "/v3/api-docs/**";
 
 	@Value("${jwt.public.key}")
 	private RSAPublicKey publicKey;
@@ -42,7 +44,7 @@ public class SecurityConfig {
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable());
 		http.authorizeHttpRequests(authorizeHttpRequest -> authorizeHttpRequest
-				.requestMatchers(H2_CONSOLE, LOGIN).permitAll()
+				.requestMatchers(H2_CONSOLE, LOGIN, SWAGGER_UI, API_DOCS).permitAll()
 				.anyRequest().authenticated());
 		http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 		http.httpBasic(Customizer.withDefaults());
