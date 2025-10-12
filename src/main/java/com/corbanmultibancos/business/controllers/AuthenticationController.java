@@ -3,6 +3,7 @@ package com.corbanmultibancos.business.controllers;
 import java.util.Map;
 
 import com.corbanmultibancos.business.controllers.exceptions.CustomError;
+import com.corbanmultibancos.business.dto.TokenDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,12 +33,11 @@ public class AuthenticationController {
             description = "HTTP Basic authentication with user and password",
             security = @SecurityRequirement(name = "basicAuth"),
             responses = {
-                    @ApiResponse(description = "User logged successfully", responseCode = "200", content = @Content(
-                            schema = @Schema(name = "token", description = "JWT token", example = "token"))),
+                    @ApiResponse(description = "User logged successfully", responseCode = "200"),
                     @ApiResponse(description = "Invalid credentials", responseCode = "401", content = @Content)})
 	@PostMapping(produces = "application/json")
-	public ResponseEntity<Map<String, String>> login(Authentication authentication) {
-		Map<String, String> response = jwtService.getToken(authentication);
+	public ResponseEntity<TokenDTO> login(Authentication authentication) {
+		TokenDTO response = jwtService.generateToken(authentication);
 		return ResponseEntity.ok(response);
 	}
 }

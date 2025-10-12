@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.corbanmultibancos.business.dto.TokenDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -17,14 +18,7 @@ public class JwtService {
 	@Autowired
 	private JwtEncoder jwtEncoder;
 
-	public Map<String, String> getToken(Authentication authentication){
-		String token = generateToken(authentication);
-		Map<String, String> tokenResponse = new HashMap<>();
-		tokenResponse.put("token", token);
-		return tokenResponse;
-	}
-
-	private String generateToken(Authentication authentication) {
+	public TokenDTO generateToken(Authentication authentication) {
 		Instant now = Instant.now();
 		long durationSeconds = 3600L;
 		String role = authentication.getAuthorities().stream().findFirst().get().getAuthority();
@@ -35,6 +29,7 @@ public class JwtService {
 			.subject(authentication.getName())
 			.claim("scope", role)
 			.build();
-		return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+		String token = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        return new TokenDTO(token);
 	}
 }
