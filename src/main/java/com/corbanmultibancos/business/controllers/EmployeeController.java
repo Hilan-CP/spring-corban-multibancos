@@ -2,6 +2,17 @@ package com.corbanmultibancos.business.controllers;
 
 import java.net.URI;
 
+import com.corbanmultibancos.business.controllers.exceptions.CustomError;
+import com.corbanmultibancos.business.controllers.exceptions.ValidationError;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -26,6 +37,11 @@ import com.corbanmultibancos.business.services.EmployeeService;
 
 import jakarta.validation.Valid;
 
+@ApiResponses(value = {
+        @ApiResponse(responseCode = "401", description = "No user logged", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Logged user does not have permission", content = @Content)
+})
+@Tag(name = "Employees", description = "Employee endpoints")
 @RestController
 @RequestMapping("/employees")
 public class EmployeeController {
@@ -33,24 +49,47 @@ public class EmployeeController {
 	@Autowired
 	private EmployeeService employeeService;
 
+    @Operation(summary = "Get an employee by id",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            parameters = @Parameter(name = "id", description = "numeric employee id", required = true, example = "1"),
+            responses = {
+                    @ApiResponse(description = "Employee found", responseCode = "200"),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content(schema = @Schema(implementation = CustomError.class)))})
 	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
-	@GetMapping("/{id}")
+	@GetMapping(value = "/{id}", produces = "application/json")
 	public ResponseEntity<EmployeeUserDTO> getEmployeeById(@PathVariable Long id) {
 		EmployeeUserDTO employeeDto = employeeService.getEmployeeById(id);
 		return ResponseEntity.ok(employeeDto);
 	}
 
+    @Operation(summary = "Get a list of employees",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            parameters = {
+                    @Parameter(name = "cpf", description = "11 digit cpf", required = false, example = "01234567890"),
+                    @Parameter(name = "name", description = "partial employee name", required = false, example = "jo")
+            },
+            responses = {
+                    @ApiResponse(description = "List of employees found (can be empty)", responseCode = "200")})
 	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
-	@GetMapping
+	@GetMapping(produces = "application/json")
 	public ResponseEntity<Page<EmployeeUserDTO>> getEmployees(@RequestParam(defaultValue = "") String cpf,
 														@RequestParam(defaultValue = "") String name,
-														Pageable pageable) {
+														@ParameterObject Pageable pageable) {
 		Page<EmployeeUserDTO> page = employeeService.getEmployees(cpf, name, pageable);
 		return ResponseEntity.ok(page);
 	}
 
+
+    @Operation(summary = "CSV file of employees",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            parameters = {
+                    @Parameter(name = "cpf", description = "11 digit cpf", required = false, example = "01234567890"),
+                    @Parameter(name = "name", description = "partial employee name", required = false, example = "jo")
+            },
+            responses = {
+                    @ApiResponse(description = "File of employees found (can be empty)", responseCode = "200")})
 	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
-	@GetMapping("/csv")
+	@GetMapping(value = "/csv", produces = "text/csv")
 	public ResponseEntity<Resource> getEmployeesAsCsv(@RequestParam(defaultValue = "") String cpf,
 												@RequestParam(defaultValue = "") String name){
 		byte[] csvData = employeeService.getEmployeesAsCsvData(cpf, name);
@@ -61,16 +100,28 @@ public class EmployeeController {
 				.body(resource);
 	}
 
+    @Operation(summary = "Create a new employee",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(description = "Employee created", responseCode = "201"),
+                    @ApiResponse(description = "Invalid input data", responseCode = "422", content = @Content(schema = @Schema(implementation = ValidationError.class)))})
 	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
-	@PostMapping
+	@PostMapping(produces = "application/json")
 	public ResponseEntity<EmployeeCreateDTO> createEmployee(@Valid @RequestBody EmployeeCreateDTO employeeDto) {
 		employeeDto = employeeService.createEmployee(employeeDto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").build(employeeDto.getId());
 		return ResponseEntity.created(uri).body(employeeDto);
 	}
 
+    @Operation(summary = "Update an employee by id",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            parameters = @Parameter(name = "id", description = "numeric employee id", required = true, example = "1"),
+            responses = {
+                    @ApiResponse(description = "Employee updated", responseCode = "200"),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content(schema = @Schema(implementation = CustomError.class))),
+                    @ApiResponse(description = "Invalid input data", responseCode = "422", content = @Content(schema = @Schema(implementation = ValidationError.class)))})
 	@PreAuthorize("hasAuthority('SCOPE_GESTOR')")
-	@PutMapping("/{id}")
+	@PutMapping(value = "/{id}", produces = "application/json")
 	public ResponseEntity<EmployeeCreateDTO> updateEmployee(@PathVariable Long id,
 														@Valid @RequestBody EmployeeCreateDTO employeeDto) {
 		employeeDto = employeeService.updateEmployee(id, employeeDto);
