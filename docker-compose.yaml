@@ -4,23 +4,48 @@ services:
     container_name: backend
     ports:
       - "8080:8080"
-    env_file:
-      - ./.env
+    environment:
+      - APPLICATION_PROFILE=dev
+      - PORT=8080
+      - DB_URL=jdbc:postgresql://database:5432/corban
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      # - PRIVATE_KEY=
+      # - PUBLIC_KEY=
     depends_on:
       - database
     networks:
       - dev
 
   database:
-    image: postgres
+    image: postgres:18-alpine
     container_name: database
     ports:
       - "5432:5432"
-    env_file:
-      - ./.env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=corban
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - dev
+
+  redis:
+    image: redis:8.8
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - redis_data:/data
     networks:
       - dev
 
 networks:
   dev:
     driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:

@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.corbanmultibancos.business.config.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class ReportService {
 		this.dateUtil = dateUtil;
 	}
 
+	@Cacheable(value = CacheConfig.REPORT)
 	@Transactional(readOnly = true)
 	public ReportTotalDTO getReport(List<Long> teamIds) {
 		List<ReportItemDTO> report = reportRepository.findReportByDates(dateUtil.getDateOfFirstDayOfMonth(),

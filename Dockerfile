@@ -4,7 +4,7 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn install -Dmaven.test.skip=true
 
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /build/target/business-0.0.1-SNAPSHOT.jar /app
 EXPOSE 8080

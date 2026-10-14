@@ -3,7 +3,12 @@ package com.corbanmultibancos.business.services;
 import java.util.List;
 import java.util.Optional;
 
+import com.corbanmultibancos.business.config.CacheConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,68 +26,74 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class TeamService {
 
-	@Autowired
-	private TeamRepository teamRepository;
+    @Autowired
+    private TeamRepository teamRepository;
 
-	@Autowired
-	private EmployeeRepository employeeRepository;
-	
-	@Autowired
-	private TeamCsvExporterService exporterService;
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
-	@Transactional(readOnly = true)
-	public TeamDTO getTeamById(Long id) {
-		Optional<Team> result = teamRepository.findById(id);
-		Team team = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND));
-		return TeamMapper.toDto(team);
-	}
+    @Autowired
+    private TeamCsvExporterService exporterService;
 
-	@Transactional(readOnly = true)
-	public List<TeamDTO> getTeams(String name) {
-		List<Team> teamList;
-		if(!name.isBlank()) {
-			teamList = teamRepository.findByNameContainingIgnoreCase(name);
-		}
-		else {
-			teamList = teamRepository.findAll();
-		}
-		return teamList.stream().map(team -> TeamMapper.toDto(team)).toList();
-	}
+    @Cacheable(value = CacheConfig.TEAM_ID, key = "#id")
+    @Transactional(readOnly = true)
+    public TeamDTO getTeamById(Long id) {
+        Optional<Team> result = teamRepository.findById(id);
+        Team team = result.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND));
+        return TeamMapper.toDto(team);
+    }
 
-	public byte[] getTeamsAsCsvData(String name) {
-		List<TeamDTO> teamDtoList = getTeams(name);
-		return exporterService.writeTeamsAsBytes(teamDtoList);
-	}
+    @Cacheable(value = CacheConfig.TEAM_LIST, key = "#name")
+    @Transactional(readOnly = true)
+    public List<TeamDTO> getTeams(String name) {
+        List<Team> teamList;
+        if (!name.isBlank()) {
+            teamList = teamRepository.findByNameContainingIgnoreCase(name);
+        } else {
+            teamList = teamRepository.findAll();
+        }
+        return teamList.stream().map(team -> TeamMapper.toDto(team)).toList();
+    }
 
-	@Transactional
-	public TeamDTO createTeam(TeamDTO teamDto) {
-		Team team = new Team();
-		TeamMapper.copyDtoToEntity(teamDto, team);
-		team = teamRepository.save(team);
-		return TeamMapper.toDto(team);
-	}
+    public byte[] getTeamsAsCsvData(String name) {
+        List<TeamDTO> teamDtoList = getTeams(name);
+        return exporterService.writeTeamsAsBytes(teamDtoList);
+    }
 
-	@Transactional
-	public TeamDTO updateTeam(Long id, TeamDTO teamDto) {
-		try {
-			Team team = teamRepository.getReferenceById(id);
-			TeamMapper.copyDtoToEntity(teamDto, team);
-			team = teamRepository.save(team);
-			return TeamMapper.toDto(team);
-		}
-		catch(EntityNotFoundException e) {
-			throw new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND);
-		}
-	}
+    @CacheEvict(value = CacheConfig.TEAM_LIST, allEntries = true)
+    @Transactional
+    public TeamDTO createTeam(TeamDTO teamDto) {
+        Team team = new Team();
+        TeamMapper.copyDtoToEntity(teamDto, team);
+        team = teamRepository.save(team);
+        return TeamMapper.toDto(team);
+    }
 
-	@Transactional
-	public void deleteTeam(Long id) {
-		if(!teamRepository.existsById(id)) {
-			throw new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND);
-		}
-		if(employeeRepository.existsByTeamId(id)) {
-			throw new DataIntegrityException(ErrorMessage.FOREIGN_KEY_VIOLATION);
-		}
-		teamRepository.deleteById(id);
-	}
+    @Caching(
+            evict = @CacheEvict(value = CacheConfig.TEAM_LIST, allEntries = true),
+            put = @CachePut(value = CacheConfig.TEAM_ID, key = "#id")
+    )
+    @Transactional
+    public TeamDTO updateTeam(Long id, TeamDTO teamDto) {
+        try {
+            Team team = teamRepository.getReferenceById(id);
+            TeamMapper.copyDtoToEntity(teamDto, team);
+            team = teamRepository.save(team);
+            return TeamMapper.toDto(team);
+        } catch (EntityNotFoundException e) {
+            throw new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND);
+        }
+    }
+
+    @CacheEvict(value = CacheConfig.TEAM_LIST, allEntries = true)
+    @Transactional
+    public void deleteTeam(Long id) {
+        if (!teamRepository.existsById(id)) {
+            throw new ResourceNotFoundException(ErrorMessage.TEAM_NOT_FOUND);
+        }
+        if (employeeRepository.existsByTeamId(id)) {
+            throw new DataIntegrityException(ErrorMessage.FOREIGN_KEY_VIOLATION);
+        }
+        teamRepository.deleteById(id);
+    }
 }

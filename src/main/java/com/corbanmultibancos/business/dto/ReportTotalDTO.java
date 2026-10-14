@@ -1,10 +1,11 @@
 package com.corbanmultibancos.business.dto;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReportTotalDTO {
+public class ReportTotalDTO implements Serializable {
 
 	private List<ReportByTeamDTO> resultByTeam = new ArrayList<>();
 	private Long totalCount;

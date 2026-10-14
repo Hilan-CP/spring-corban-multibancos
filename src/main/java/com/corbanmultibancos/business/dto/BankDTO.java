@@ -1,12 +1,13 @@
 package com.corbanmultibancos.business.dto;
 
 import com.corbanmultibancos.business.validations.BankDTOValid;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.io.Serializable;
+
 @BankDTOValid
-public class BankDTO {
+public class BankDTO implements Serializable {
 
 	private Long id;
 	

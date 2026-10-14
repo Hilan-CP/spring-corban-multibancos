@@ -2,7 +2,9 @@ package com.corbanmultibancos.business.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class TeamDTO {
+import java.io.Serializable;
+
+public class TeamDTO implements Serializable {
 
 	private Long id;
 	
