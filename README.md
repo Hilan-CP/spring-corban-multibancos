@@ -29,7 +29,7 @@ Ambos os usuários podem exportar os resultados de buscas para arquivo de extens
 Cada proposta deve obrigatoriamente ter um funcionário responsável por sua elaboração, um cliente destinatário e um banco que realizará o empréstimo. Os funcionários podem atuar individualmente ou em equipe, sendo possível que existam equipes sem funcionários atribuídos. Bancos, clientes e funcionários podem ser cadastrados no sistema sem a necessidade de vínculo imediato com uma proposta. Cada funcionário pode ser ou não um usuário do sistema, de forma que ao sair da empresa o usuário pode ser apagado para remover o acesso ao sistema.
 
 ## Requisitos de software
-Os requisitos funcionais do sistema podem ser encontrados no <a href="./documents/requisitos de software.docx">documento de requisitos</a>.
+Os requisitos funcionais do sistema podem ser encontrados no <a href="./documents/requisitos.md">documento de requisitos</a>.
 
 ## Tecnologias utilizadas
 - Java
@@ -40,6 +40,24 @@ Os requisitos funcionais do sistema podem ser encontrados no <a href="./document
 - Banco de dados H2
 - Testes unitários com JUnit 5 e Mockito
 - Testes de integração com MockMvc
+
+## Como executar o projeto
+
+É necessário ter o Docker e o Docker Compose instalados. Na raiz do projeto, crie o arquivo `.env` a partir do exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Revise as variáveis do `.env` conforme necessário. O exemplo configura o perfil `dev`, a porta `8080`, o banco PostgreSQL `corban` e o Redis. Inicie os containers do backend, PostgreSQL e Redis com:
+
+```bash
+docker compose up --build -d
+```
+
+Quando estiver pronto, acesse a documentação interativa da API em [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html). Para parar os serviços, execute `docker compose down`.
+
+> **Atenção:** o perfil `dev` está configurado com `ddl-auto=create-drop`; as tabelas são recriadas quando a aplicação inicia e removidas quando ela encerra. Não use esse perfil com dados que precisam ser preservados.
 
 ## Ambiente Postman
 Na pasta [documents](documents) há as coleções de endpoints e variáveis de ambiente do Postman para facilitar os testes manuais.
