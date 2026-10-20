@@ -1,22 +1,20 @@
 package com.corbanmultibancos.business.controllers;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import org.junit.jupiter.api.BeforeAll;
+import com.corbanmultibancos.business.config.ClockConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.corbanmultibancos.business.config.ClockConfig;
-import com.corbanmultibancos.business.util.TokenUtil;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -24,19 +22,11 @@ import com.corbanmultibancos.business.util.TokenUtil;
 @Import(ClockConfig.class)
 public class ReportControllerIntegrationTests {
 
-	private static String gestorToken;
-	private static String consultorToken;
-
 	@Autowired
 	private MockMvc mockMvc;
 
 	private String teamIds;
 
-	@BeforeAll
-	static void setUpOnce(@Autowired MockMvc mockMvc, @Autowired TokenUtil tokenUtil) throws Exception {
-		gestorToken = tokenUtil.logInAndGetToken(mockMvc, "zenobia", "zenobia123");
-		consultorToken = tokenUtil.logInAndGetToken(mockMvc, "florinda", "florinda123");
-	}
 
 	@BeforeEach
 	void setUp() {
@@ -44,10 +34,10 @@ public class ReportControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getReportShouldReturnEmptyReportWhenEmptyTeamListAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/report?teamIds=")
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultByTeam").isEmpty())
 			.andExpect(jsonPath("$.totalCount").value(0))
@@ -58,10 +48,10 @@ public class ReportControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getReportShouldReturnReportWhenNotEmptyTeamListAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/report?teamIds={teamIds}", teamIds)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultByTeam").isNotEmpty())
 			.andExpect(jsonPath("$.totalCount").value(8))
@@ -72,10 +62,10 @@ public class ReportControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getReportShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(get("/report?teamIds={teamIds}", teamIds)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 

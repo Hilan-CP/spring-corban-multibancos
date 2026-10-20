@@ -14,11 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.corbanmultibancos.business.dto.ProposalCreateDTO;
 import com.corbanmultibancos.business.dto.ProposalDataDTO;
@@ -38,7 +38,7 @@ import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundExcept
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class ProposalServiceTests {
 
 	@InjectMocks
@@ -99,47 +99,39 @@ public class ProposalServiceTests {
 		proposalDtoPage = new PageImpl<>(List.of(ProposalMapper.toProposalDataDto(proposalEntity)));
 		proposalCreateDto = new ProposalCreateDTO(null, "123ABC", 100.0, beginDate, endDate, customer.getId(), bank.getId());
 		pageable = PageRequest.of(0, 10);
-		Mockito.when(proposalRepository.findById(existingId)).thenReturn(Optional.of(proposalEntity));
-		Mockito.when(proposalRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(proposalRepository.findByCode(existingProposalCode)).thenReturn(Optional.of(proposalEntity));
-		Mockito.when(proposalRepository.findByCode(nonExistingProposalCode)).thenReturn(Optional.empty());
-		Mockito.when(proposalRepository.getReferenceById(existingId)).thenReturn(proposalEntity);
-		Mockito.when(proposalRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(proposalRepository.save(any())).thenReturn(proposalEntity);
-		Mockito.when(proposalRepository.findByFilter(any(), any(Pageable.class))).thenReturn(proposalDtoPage);
-		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
-		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
-		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.doNothing().when(authorizationService).authorizeAdminOrOwner(employeeId);
-		Mockito.doReturn(user).when(authorizationService).getLoggedUser();
-		Mockito.doReturn(true).when(authorizationService).isAdmin(any());
 	}
 
 	@Test
 	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingId() {
+		Mockito.when(proposalRepository.findById(existingId)).thenReturn(Optional.of(proposalEntity));
 		ProposalDataDTO proposalDto = proposalService.getProposalById(existingId);
 		Assertions.assertEquals(existingId, proposalDto.getId());
 	}
 
 	@Test
 	public void getProposalByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(proposalRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.getProposalById(nonExistingId));
 	}
 
 	@Test
 	public void getProposalByIdShouldReturnProposalDataDTOWhenExistingProposalCode() {
+		Mockito.when(proposalRepository.findByCode(existingProposalCode)).thenReturn(Optional.of(proposalEntity));
 		ProposalDataDTO proposalDto = proposalService.getProposalByCode(existingProposalCode);
 		Assertions.assertEquals(existingId, proposalDto.getId());
 	}
 
 	@Test
 	public void getProposalByIdShouldThrowResourceNotFoundExceptionWhenNonExistingProposalCode() {
+		Mockito.when(proposalRepository.findByCode(nonExistingProposalCode)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> proposalService.getProposalByCode(nonExistingProposalCode));
 	}
 
 	@Test
 	public void getProposalsShouldReturnPageOfSingleProposalDataDTOWhenExistingCode() {
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(authorizationService.isAdmin(any())).thenReturn(true);
+		Mockito.when(proposalRepository.findByFilter(any(), any(Pageable.class))).thenReturn(proposalDtoPage);
 		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", 0, dateFieldName, beginDate,
 				endDate, pageable);
 		Assertions.assertEquals(1, dtoPage.getSize());
@@ -147,6 +139,9 @@ public class ProposalServiceTests {
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndBankCodeNotNull() {
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(authorizationService.isAdmin(any())).thenReturn(true);
+		Mockito.when(proposalRepository.findByFilter(any(), any(Pageable.class))).thenReturn(proposalDtoPage);
 		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", bankCode, dateFieldName, beginDate,
 				endDate, pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
@@ -154,6 +149,9 @@ public class ProposalServiceTests {
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateAndEmployeeNameNotNull() {
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(authorizationService.isAdmin(any())).thenReturn(true);
+		Mockito.when(proposalRepository.findByFilter(any(), any(Pageable.class))).thenReturn(proposalDtoPage);
 		Page<ProposalDataDTO> dtoPage = proposalService.getProposals(partialEmployeeName, 0, dateFieldName,
 				beginDate, endDate, pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
@@ -161,6 +159,9 @@ public class ProposalServiceTests {
 
 	@Test
 	public void getProposalsShouldReturnPageOfProposalDataDTOWhenDateNotNull() {
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(authorizationService.isAdmin(any())).thenReturn(true);
+		Mockito.when(proposalRepository.findByFilter(any(), any(Pageable.class))).thenReturn(proposalDtoPage);
 		Page<ProposalDataDTO> dtoPage = proposalService.getProposals("", 0, dateFieldName, beginDate, endDate,
 				pageable);
 		Assertions.assertFalse(dtoPage.isEmpty());
@@ -192,6 +193,10 @@ public class ProposalServiceTests {
 
 	@Test
 	public void createProposalShouldReturnProposalDataDTOWhenValidData() {
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
+		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
+		Mockito.when(proposalRepository.save(any())).thenReturn(proposalEntity);
 		ProposalDataDTO proposalDto = proposalService.createProposal(proposalCreateDto);
 		Assertions.assertNotNull(proposalDto.getId());
 	}
@@ -199,6 +204,9 @@ public class ProposalServiceTests {
 	@Test
 	public void createProposalShouldThrowResourceNotFoundExceptionWhenNonExistingBank() {
 		proposalCreateDto.setBankId(nonExistingId);
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
+		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> proposalService.createProposal(proposalCreateDto));
 	}
@@ -206,24 +214,33 @@ public class ProposalServiceTests {
 	@Test
 	public void createProposalShouldThrowResourceNotFoundExceptionWhenNonExistingCustomer() {
 		proposalCreateDto.setCustomerId(nonExistingId);
+		Mockito.when(authorizationService.getLoggedUser()).thenReturn(user);
+		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> proposalService.createProposal(proposalCreateDto));
 	}
 
 	@Test
 	public void updateProposalShouldReturnProposalDataDTOWhenExistingId() {
+		Mockito.when(proposalRepository.getReferenceById(existingId)).thenReturn(proposalEntity);
+		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customer));
+		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bank));
+		Mockito.when(proposalRepository.save(any())).thenReturn(proposalEntity);
 		ProposalDataDTO proposalDto = proposalService.updateProposal(existingId, proposalCreateDto);
 		Assertions.assertNotNull(proposalDto.getId());
 	}
 
 	@Test
 	public void updateProposalShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(proposalRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> proposalService.updateProposal(nonExistingId, proposalCreateDto));
 	}
 
 	@Test
 	public void updateCancelProposalShouldReturnProposalDataDTOWhenExistingId() {
+		Mockito.when(proposalRepository.getReferenceById(existingId)).thenReturn(proposalEntity);
+		Mockito.when(proposalRepository.save(any())).thenReturn(proposalEntity);
 		ProposalDataDTO proposalDto = proposalService.updateCancelProposal(existingId);
 		Assertions.assertEquals(null, proposalDto.getPayment());
 		Assertions.assertEquals(ProposalStatus.CANCELADA, proposalDto.getStatus());
@@ -231,6 +248,7 @@ public class ProposalServiceTests {
 
 	@Test
 	public void updateCancelProposalShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(proposalRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> proposalService.updateCancelProposal(nonExistingId));
 	}

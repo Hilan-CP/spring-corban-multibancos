@@ -3,6 +3,7 @@ package com.corbanmultibancos.business.config;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -18,6 +19,7 @@ import java.time.Duration;
 
 @Configuration
 @EnableCaching
+@Profile({"prod","dev"})
 public class CacheConfig {
     public static final String BANK_ID = "bank-id";
     public static final String BANK_LIST = "bank-list";

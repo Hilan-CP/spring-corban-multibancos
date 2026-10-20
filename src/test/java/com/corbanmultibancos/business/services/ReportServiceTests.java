@@ -15,14 +15,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.corbanmultibancos.business.dto.ReportItemDTO;
 import com.corbanmultibancos.business.dto.ReportTotalDTO;
 import com.corbanmultibancos.business.repositories.ReportRepository;
 import com.corbanmultibancos.business.util.DateUtil;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class ReportServiceTests {
 
 	@InjectMocks
@@ -57,15 +57,14 @@ public class ReportServiceTests {
 		today = LocalDate.of(2025, 6, 21);
 		firstDayOfMonth = LocalDate.of(2025, 6, 1);
 		lastDayOfMonth = LocalDate.of(2025, 6, 30);
-		Mockito.when(reportRepository.findReportByDates(any(), any(), any(), eq(List.of()))).thenReturn(List.of());
-		Mockito.when(reportRepository.findReportByDates(any(), any(), any(), eq(teamIds))).thenReturn(report);
-		Mockito.when(dateUtil.getDateOfCurrentDay()).thenReturn(today);
-		Mockito.when(dateUtil.getDateOfFirstDayOfMonth()).thenReturn(firstDayOfMonth);
-		Mockito.when(dateUtil.getDateOfLastDayOfMonth()).thenReturn(lastDayOfMonth);
 	}
 
 	@Test
 	public void getReportShouldReturnEmptyReportWhenEmptyTeamList() {
+		Mockito.when(dateUtil.getDateOfCurrentDay()).thenReturn(today);
+		Mockito.when(dateUtil.getDateOfFirstDayOfMonth()).thenReturn(firstDayOfMonth);
+		Mockito.when(dateUtil.getDateOfLastDayOfMonth()).thenReturn(lastDayOfMonth);
+		Mockito.when(reportRepository.findReportByDates(any(), any(), any(), eq(List.of()))).thenReturn(List.of());
 		ReportTotalDTO finalReport = reportService.getReport(List.of());
 		Assertions.assertTrue(finalReport.getResultByTeam().isEmpty());
 		Assertions.assertEquals(0L, finalReport.getTotalCount());
@@ -77,6 +76,10 @@ public class ReportServiceTests {
 
 	@Test
 	public void getReportShouldReturnReportWhenNotEmptyTeamList() {
+		Mockito.when(dateUtil.getDateOfCurrentDay()).thenReturn(today);
+		Mockito.when(dateUtil.getDateOfFirstDayOfMonth()).thenReturn(firstDayOfMonth);
+		Mockito.when(dateUtil.getDateOfLastDayOfMonth()).thenReturn(lastDayOfMonth);
+		Mockito.when(reportRepository.findReportByDates(any(), any(), any(), eq(teamIds))).thenReturn(report);
 		ReportTotalDTO finalReport = reportService.getReport(teamIds);
 		BigDecimal generatedDay = new BigDecimal(5581.5).setScale(2);
 		BigDecimal paidDay = new BigDecimal(4700.0).setScale(2);

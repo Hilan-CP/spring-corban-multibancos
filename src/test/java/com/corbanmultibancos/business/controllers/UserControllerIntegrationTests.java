@@ -1,37 +1,26 @@
 package com.corbanmultibancos.business.controllers;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import org.junit.jupiter.api.BeforeAll;
+import com.corbanmultibancos.business.dto.UserCreateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
-import com.corbanmultibancos.business.dto.UserCreateDTO;
-import com.corbanmultibancos.business.util.TokenUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 public class UserControllerIntegrationTests {
-
-	private static String gestorToken;
-	private static String consultorToken;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -47,11 +36,6 @@ public class UserControllerIntegrationTests {
 	private String otherUsername;
 	private UserCreateDTO userCreateDto;
 
-	@BeforeAll
-	static void setUpOnce(@Autowired MockMvc mockMvc, @Autowired TokenUtil tokenUtil) throws Exception {
-		gestorToken = tokenUtil.logInAndGetToken(mockMvc, "zenobia", "zenobia123");
-		consultorToken = tokenUtil.logInAndGetToken(mockMvc, "florinda", "florinda123");
-	}
 
 	@BeforeEach
 	void setUp() {
@@ -65,10 +49,10 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getUserByIdShouldReturnUserDataDTOWhenExistingIdAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/users/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.employeeId").value(existingId))
 			.andExpect(jsonPath("$.username").exists())
@@ -78,10 +62,10 @@ public class UserControllerIntegrationTests {
 	}
 	
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getUserByIdShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(get("/users/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -93,46 +77,46 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getUserByIdShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(get("/users/{id}", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getUsersShouldReturnPageOfSingleUserDataDTOWhenExistingUsername() throws Exception {
 		mockMvc.perform(get("/users?username={username}", existingUsername)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty())
 			.andExpect(jsonPath("$.numberOfElements").value(1));
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getUsersShouldReturnEmptyPageWhenNonExistingUsername() throws Exception {
 		mockMvc.perform(get("/users?username={username}", nonExistingUsername)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isEmpty());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getUsersShouldReturnPageOfUserDataDTOWhenNoParameterAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/users")
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").isNotEmpty());
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getUsersShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(get("/users")
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -144,13 +128,13 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUserDataDTOWhenValidDataAndRoleGestor() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.employeeId").value(userCreateDto.getEmployeeId()))
 			.andExpect(jsonPath("$.username").value(userCreateDto.getUsername()))
@@ -160,13 +144,13 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void createUserShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -181,97 +165,97 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUnprocessableEntityWhenEmployeeIdIsNull() throws Exception {
 		userCreateDto.setEmployeeId(null);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUnprocessableEntityWhenUsernameIsBlank() throws Exception {
 		userCreateDto.setUsername(null);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUnprocessableEntityWhenPasswordIsBlank() throws Exception {
 		userCreateDto.setPassword(null);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUnprocessableEntityWhenRoleIsNull() throws Exception {
 		userCreateDto.setRoleId(null);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnNotFoundWhenNonExistingRole() throws Exception {
 		userCreateDto.setRoleId(1000L);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUnprocessableEntityWhenUniqueEmployeeIdViolation() throws Exception {
 		userCreateDto.setEmployeeId(existingId);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createUserShouldReturnUnprocessableEntityWhenUniqueUsernameViolation() throws Exception {
 		userCreateDto.setUsername(existingUsername);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(post("/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void updateUserShouldReturnUserDataDTOWhenExistingIdAndValidDataAndRoleGestor() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.employeeId").value(existingId))
 			.andExpect(jsonPath("$.username").value(userCreateDto.getUsername()))
@@ -281,13 +265,13 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void updateUserShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -302,41 +286,41 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void updateUserShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(put("/users/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void updateUserShouldReturnUnprocessableEntityWhenUniqueUsernameViolation() throws Exception {
 		userCreateDto.setUsername(otherUsername);
 		String userJson = objectMapper.writeValueAsString(userCreateDto);
 		mockMvc.perform(put("/users/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(userJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void deleteUserShouldReturnNoContentWhenExistingIdAndRoleGestor() throws Exception {
 		mockMvc.perform(delete("/users/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNoContent());
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void deleteUserShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(delete("/users/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -348,17 +332,17 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void deleteUserShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(delete("/users/{id}", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getUsersAsCsvShouldReturnResourceWhenRoleGestor() throws Exception {
-		mockMvc.perform(get("/users/csv")
-				.header("Authorization", "Bearer " + gestorToken))
+		mockMvc.perform(get("/users/csv"))
 			.andExpect(status().isOk())
 			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
 			.andExpect(content().contentType("text/csv;charset=UTF-8"))
@@ -366,9 +350,9 @@ public class UserControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getUsersAsCsvShouldReturnForbiddenWhenRoleConsultor() throws Exception {
-		mockMvc.perform(get("/users/csv")
-				.header("Authorization", "Bearer " + consultorToken))
+		mockMvc.perform(get("/users/csv"))
 			.andExpect(status().isForbidden());
 	}
 

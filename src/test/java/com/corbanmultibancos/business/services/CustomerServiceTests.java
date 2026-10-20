@@ -16,11 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.corbanmultibancos.business.dto.CustomerDTO;
 import com.corbanmultibancos.business.entities.Customer;
@@ -31,7 +31,7 @@ import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundExcept
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class CustomerServiceTests {
 
 	@InjectMocks
@@ -64,31 +64,24 @@ public class CustomerServiceTests {
 		customerEntity = new Customer(existingId, existingCpf, "Sergio", "11930587328", LocalDate.parse("1969-08-13"));
 		customerPage = new PageImpl<>(List.of(customerEntity));
 		pageable = PageRequest.of(0, 10);
-		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customerEntity));
-		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(customerRepository.findByCpf(existingCpf)).thenReturn(Optional.of(customerEntity));
-		Mockito.when(customerRepository.findByCpf(nonExistingCpf)).thenReturn(Optional.empty());
-		Mockito.when(customerRepository.findByNameContainingIgnoreCase(partialName, pageable)).thenReturn(customerPage);
-		Mockito.when(customerRepository.findByPhoneContaining(partialPhone, pageable)).thenReturn(customerPage);
-		Mockito.when(customerRepository.findAll(pageable)).thenReturn(customerPage);
-		Mockito.when(customerRepository.getReferenceById(existingId)).thenReturn(customerEntity);
-		Mockito.when(customerRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(customerRepository.save(any())).thenReturn(customerEntity);
 	}
 
 	@Test
 	public void getCustomerByIdShouldReturnCustomerDTOWhenExistingId() {
+		Mockito.when(customerRepository.findById(existingId)).thenReturn(Optional.of(customerEntity));
 		CustomerDTO customerDto = customerService.getCustomerById(existingId);
 		Assertions.assertEquals(existingId, customerDto.getId());
 	}
 
 	@Test
 	public void getCustomerByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(customerRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> customerService.getCustomerById(nonExistingId));
 	}
 
 	@Test
 	public void getCustomersShouldReturnPageOfSingleCustomerDTOWhenExistingCpf() {
+		Mockito.when(customerRepository.findByCpf(existingCpf)).thenReturn(Optional.of(customerEntity));
 		Page<CustomerDTO> page = customerService.getCustomers(existingCpf, "", "", pageable);
 		Assertions.assertEquals(1, page.getSize());
 		Mockito.verify(customerRepository, times(1)).findByCpf(any());
@@ -99,6 +92,7 @@ public class CustomerServiceTests {
 
 	@Test
 	public void getCustomersShouldReturnEmptyPageWhenNonExistingCpf() {
+		Mockito.when(customerRepository.findByCpf(nonExistingCpf)).thenReturn(Optional.empty());
 		Page<CustomerDTO> page = customerService.getCustomers(nonExistingCpf, "", "", pageable);
 		Assertions.assertTrue(page.isEmpty());
 		Mockito.verify(customerRepository, times(1)).findByCpf(any());
@@ -109,6 +103,7 @@ public class CustomerServiceTests {
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenPartialName() {
+		Mockito.when(customerRepository.findByNameContainingIgnoreCase(partialName, pageable)).thenReturn(customerPage);
 		Page<CustomerDTO> page = customerService.getCustomers("", partialName, "", pageable);
 		Assertions.assertFalse(page.isEmpty());
 		Mockito.verify(customerRepository, never()).findByCpf(any());
@@ -119,6 +114,7 @@ public class CustomerServiceTests {
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenPartialPhone() {
+		Mockito.when(customerRepository.findByPhoneContaining(partialPhone, pageable)).thenReturn(customerPage);
 		Page<CustomerDTO> page = customerService.getCustomers("", "", partialPhone, pageable);
 		Assertions.assertFalse(page.isEmpty());
 		Mockito.verify(customerRepository, never()).findByCpf(any());
@@ -129,6 +125,7 @@ public class CustomerServiceTests {
 
 	@Test
 	public void getCustomersShouldReturnCustomerDTOPageWhenNoParameter() {
+		Mockito.when(customerRepository.findAll(pageable)).thenReturn(customerPage);
 		Page<CustomerDTO> page = customerService.getCustomers("", "", "", pageable);
 		Assertions.assertFalse(page.isEmpty());
 		Mockito.verify(customerRepository, never()).findByCpf(any());
@@ -163,18 +160,22 @@ public class CustomerServiceTests {
 
 	@Test
 	public void createCustomerShouldReturnCustomerDTO() {
+		Mockito.when(customerRepository.save(any())).thenReturn(customerEntity);
 		CustomerDTO customerDto = customerService.createCustomer(CustomerMapper.toDto(customerEntity));
 		Assertions.assertNotNull(customerDto.getId());
 	}
 
 	@Test
 	public void updateCustomerShouldReturnCustomerDTOWhenExistingId() {
+		Mockito.when(customerRepository.getReferenceById(existingId)).thenReturn(customerEntity);
+		Mockito.when(customerRepository.save(any())).thenReturn(customerEntity);
 		CustomerDTO customerDto = customerService.updateCustomer(existingId, CustomerMapper.toDto(customerEntity));
 		Assertions.assertEquals(existingId, customerDto.getId());
 	}
 
 	@Test
 	public void updateCustomerShouldReturnEntityNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(customerRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> customerService.updateCustomer(nonExistingId, CustomerMapper.toDto(customerEntity)));
 	}

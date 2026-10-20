@@ -1,37 +1,26 @@
 package com.corbanmultibancos.business.controllers;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import org.junit.jupiter.api.BeforeAll;
+import com.corbanmultibancos.business.dto.TeamDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
-import com.corbanmultibancos.business.dto.TeamDTO;
-import com.corbanmultibancos.business.util.TokenUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 public class TeamControllerIntegrationTests {
-
-	private static String gestorToken;
-	private static String consultorToken;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -45,11 +34,6 @@ public class TeamControllerIntegrationTests {
 	private String partialName;
 	private TeamDTO teamDto;
 
-	@BeforeAll
-	static void setUpOnce(@Autowired MockMvc mockMvc, @Autowired TokenUtil tokenUtil) throws Exception {
-		gestorToken = tokenUtil.logInAndGetToken(mockMvc, "zenobia", "zenobia123");
-		consultorToken = tokenUtil.logInAndGetToken(mockMvc, "florinda", "florinda123");
-	}
 
 	@BeforeEach
 	void setUp() {
@@ -61,20 +45,20 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getTeamByIdShouldReturnTeamDTOWhenExistingIdAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/teams/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.name").exists());
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getTeamByIdShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(get("/teams/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -86,36 +70,36 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getTeamByIdShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(get("/teams/{id}", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getTeamsShouldReturnTeamDTOListWhenPartialName() throws Exception {
 		mockMvc.perform(get("/teams?name={name}", partialName)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isNotEmpty());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getTeamsShouldReturnTeamDTOListWhenNoParameterAndRoleGestor() throws Exception {
 		mockMvc.perform(get("/teams")
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isNotEmpty());
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getTeamsShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(get("/teams")
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -127,26 +111,26 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createTeamShouldReturnTeamDTOWhenValidDataAndRoleGestor() throws Exception {
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(post("/teams")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.name").value(teamDto.getName()));
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void createTeamShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(post("/teams")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -161,38 +145,38 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void createTeamShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
 		teamDto.setName(null);
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(post("/teams")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void updateTeamShouldReturnTeamDTOWhenExistingIdAndValidDataAndRoleGestor() throws Exception {
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(put("/teams/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(existingId))
 			.andExpect(jsonPath("$.name").value(teamDto.getName()));
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void updateTeamShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(put("/teams/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -207,41 +191,41 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void updateTeamShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(put("/teams/{id}", nonExistingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void updateTeamShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
 		teamDto.setName(null);
 		String teamJson = objectMapper.writeValueAsString(teamDto);
 		mockMvc.perform(put("/teams/{id}", existingId)
 				.accept(MediaType.APPLICATION_JSON)
 				.content(teamJson)
-				.contentType(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void deleteTeamShouldReturnNoContentWhenEmptyTeamAndRoleGestor() throws Exception {
 		mockMvc.perform(delete("/teams/{id}", emptyTeamId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNoContent());
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void deleteTeamShouldReturnForbiddenWhenRoleConsultor() throws Exception {
 		mockMvc.perform(delete("/teams/{id}", emptyTeamId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + consultorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isForbidden());
 	}
 
@@ -253,25 +237,25 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void deleteTeamShouldReturnNotFoundWhenNonExistingId() throws Exception {
 		mockMvc.perform(delete("/teams/{id}", nonExistingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void deleteTeamShouldReturnConflictWhenNotEmptyTeam() throws Exception {
 		mockMvc.perform(delete("/teams/{id}", existingId)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", "Bearer " + gestorToken))
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isConflict());
 	}
 
 	@Test
+	@WithMockUser(username = "zenobia", authorities = "SCOPE_GESTOR")
 	public void getTeamsAsCsvShouldReturnResourceWhenRoleGestor() throws Exception {
-		mockMvc.perform(get("/teams/csv")
-				.header("Authorization", "Bearer " + gestorToken))
+		mockMvc.perform(get("/teams/csv"))
 			.andExpect(status().isOk())
 			.andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION))
 			.andExpect(content().contentType("text/csv;charset=UTF8"))
@@ -279,9 +263,9 @@ public class TeamControllerIntegrationTests {
 	}
 
 	@Test
+	@WithMockUser(username = "florinda", authorities = "SCOPE_CONSULTOR")
 	public void getTeamsAsCsvShouldReturnForbiddenWhenRoleConsultor() throws Exception {
-		mockMvc.perform(get("/teams/csv")
-				.header("Authorization", "Bearer " + consultorToken))
+		mockMvc.perform(get("/teams/csv"))
 			.andExpect(status().isForbidden());
 	}
 

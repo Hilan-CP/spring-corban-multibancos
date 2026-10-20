@@ -15,11 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.corbanmultibancos.business.dto.EmployeeCreateDTO;
 import com.corbanmultibancos.business.dto.EmployeeUserDTO;
@@ -31,7 +31,7 @@ import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundExcept
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class EmployeeServiceTests {
 
 	@InjectMocks
@@ -64,30 +64,24 @@ public class EmployeeServiceTests {
 		employeeCreationDto = EmployeeMapper.toEmployeeCreationDto(employeeEntity);
 		employeePage = new PageImpl<>(List.of(employeeEntity));
 		pageable = PageRequest.of(0, 10);
-		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employeeEntity));
-		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(employeeRepository.findByCpf(existingCpf)).thenReturn(Optional.of(employeeEntity));
-		Mockito.when(employeeRepository.findByCpf(nonExistingCpf)).thenReturn(Optional.empty());
-		Mockito.when(employeeRepository.findByNameContainingIgnoreCase(partialName, pageable)).thenReturn(employeePage);
-		Mockito.when(employeeRepository.findAll(pageable)).thenReturn(employeePage);
-		Mockito.when(employeeRepository.getReferenceById(existingId)).thenReturn(employeeEntity);
-		Mockito.when(employeeRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(employeeRepository.save(any())).thenReturn(employeeEntity);
 	}
 
 	@Test
 	public void getEmployeeByIdShouldReturnEmployeeUserDTOWhenExistingId() {
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employeeEntity));
 		EmployeeUserDTO employeeDto = employeeService.getEmployeeById(existingId);
 		Assertions.assertEquals(existingId, employeeDto.getId());
 	}
 
 	@Test
 	public void getEmployeeByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> employeeService.getEmployeeById(nonExistingId));
 	}
 
 	@Test
 	public void getEmployeesShouldReturnPageOfSingleEmployeeUserDTOWhenExistingCpf() {
+		Mockito.when(employeeRepository.findByCpf(existingCpf)).thenReturn(Optional.of(employeeEntity));
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees(existingCpf, "", pageable);
 		Assertions.assertEquals(1, employeeDtoPage.getSize());
 		Mockito.verify(employeeRepository, times(1)).findByCpf(any());
@@ -97,6 +91,7 @@ public class EmployeeServiceTests {
 
 	@Test
 	public void getEmployeesShouldReturnEmptyPageWhenNonExistingCpf() {
+		Mockito.when(employeeRepository.findByCpf(nonExistingCpf)).thenReturn(Optional.empty());
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees(nonExistingCpf, "", pageable);
 		Assertions.assertTrue(employeeDtoPage.isEmpty());
 		Mockito.verify(employeeRepository, times(1)).findByCpf(any());
@@ -106,6 +101,7 @@ public class EmployeeServiceTests {
 
 	@Test
 	public void getEmployeesShouldReturnPageOfEmployeeUserDTOWhenPartialName() {
+		Mockito.when(employeeRepository.findByNameContainingIgnoreCase(partialName, pageable)).thenReturn(employeePage);
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees("", partialName, pageable);
 		Assertions.assertFalse(employeeDtoPage.isEmpty());
 		Mockito.verify(employeeRepository, never()).findByCpf(any());
@@ -115,6 +111,7 @@ public class EmployeeServiceTests {
 
 	@Test
 	public void getEmployeesShouldReturnPageOfEmployeeUserDTOWhenNoParameter() {
+		Mockito.when(employeeRepository.findAll(pageable)).thenReturn(employeePage);
 		Page<EmployeeUserDTO> employeeDtoPage = employeeService.getEmployees("", "", pageable);
 		Assertions.assertFalse(employeeDtoPage.isEmpty());
 		Mockito.verify(employeeRepository, never()).findByCpf(any());
@@ -130,18 +127,22 @@ public class EmployeeServiceTests {
 
 	@Test
 	public void createEmployeeShouldReturnEmployeeCreationDTO() {
+		Mockito.when(employeeRepository.save(any())).thenReturn(employeeEntity);
 		EmployeeCreateDTO employeeDto = employeeService.createEmployee(employeeCreationDto);
 		Assertions.assertNotNull(employeeDto.getId());
 	}
 
 	@Test
 	public void updateEmployeeShouldReturnEmployeeCreationDTOWhenExistingId() {
+		Mockito.when(employeeRepository.getReferenceById(existingId)).thenReturn(employeeEntity);
+		Mockito.when(employeeRepository.save(any())).thenReturn(employeeEntity);
 		EmployeeCreateDTO employeeDto = employeeService.updateEmployee(existingId, employeeCreationDto);
 		Assertions.assertNotNull(employeeDto.getId());
 	}
 
 	@Test
 	public void updateEmployeeShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(employeeRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> employeeService.updateEmployee(nonExistingId, employeeCreationDto));
 	}

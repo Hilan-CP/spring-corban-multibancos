@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.corbanmultibancos.business.dto.TeamDTO;
 import com.corbanmultibancos.business.entities.Team;
@@ -26,7 +26,7 @@ import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundExcept
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class TeamServiceTests {
 
 	@InjectMocks
@@ -58,35 +58,24 @@ public class TeamServiceTests {
 		nonExistingName = "equipe inexistente";
 		teamEntity = new Team(1L, "Junior");
 		teamList = List.of(teamEntity);
-		Mockito.when(teamRepository.findById(existingId)).thenReturn(Optional.of(teamEntity));
-		Mockito.when(teamRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(teamRepository.findByNameContainingIgnoreCase(partialName)).thenReturn(teamList);
-		Mockito.when(teamRepository.findByNameContainingIgnoreCase(nonExistingName)).thenReturn(List.of());
-		Mockito.when(teamRepository.findAll()).thenReturn(teamList);
-		Mockito.when(teamRepository.getReferenceById(existingId)).thenReturn(teamEntity);
-		Mockito.when(teamRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(teamRepository.save(any())).thenReturn(teamEntity);
-		Mockito.when(teamRepository.existsById(existingId)).thenReturn(true);
-		Mockito.when(teamRepository.existsById(nonExistingId)).thenReturn(false);
-		Mockito.when(teamRepository.existsById(dependentId)).thenReturn(true);
-		Mockito.doNothing().when(teamRepository).deleteById(existingId);
-		Mockito.when(employeeRepository.existsByTeamId(existingId)).thenReturn(false);
-		Mockito.when(employeeRepository.existsByTeamId(dependentId)).thenReturn(true);
 	}
 
 	@Test
 	public void getTeamByIdShouldReturnTeamDTOWhenExistingId() {
+		Mockito.when(teamRepository.findById(existingId)).thenReturn(Optional.of(teamEntity));
 		TeamDTO teamDto = teamService.getTeamById(existingId);
 		Assertions.assertEquals(existingId, teamDto.getId());
 	}
 
 	@Test
 	public void getTeamByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(teamRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> teamService.getTeamById(nonExistingId));
 	}
 
 	@Test
 	public void getTeamsShouldReturnTeamListWhenPartialName() {
+		Mockito.when(teamRepository.findByNameContainingIgnoreCase(partialName)).thenReturn(teamList);
 		List<TeamDTO> teamDtoList = teamService.getTeams(partialName);
 		Assertions.assertFalse(teamDtoList.isEmpty());
 		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(any());
@@ -95,6 +84,7 @@ public class TeamServiceTests {
 
 	@Test
 	public void getTeamsShouldReturnEmptyListWhenNonExistingName() {
+		Mockito.when(teamRepository.findByNameContainingIgnoreCase(nonExistingName)).thenReturn(List.of());
 		List<TeamDTO> teamDtoList = teamService.getTeams(nonExistingName);
 		Assertions.assertTrue(teamDtoList.isEmpty());
 		Mockito.verify(teamRepository, times(1)).findByNameContainingIgnoreCase(any());
@@ -103,6 +93,7 @@ public class TeamServiceTests {
 
 	@Test
 	public void getTeamsShouldReturnTeamListWhenNoParameter() {
+		Mockito.when(teamRepository.findAll()).thenReturn(teamList);
 		List<TeamDTO> teamDtoList = teamService.getTeams("");
 		Assertions.assertFalse(teamDtoList.isEmpty());
 		Mockito.verify(teamRepository, never()).findByNameContainingIgnoreCase(any());
@@ -111,36 +102,45 @@ public class TeamServiceTests {
 
 	@Test
 	public void createTeamShouldReturnTeamDTO() {
+		Mockito.when(teamRepository.save(any())).thenReturn(teamEntity);
 		TeamDTO teamDto = teamService.createTeam(TeamMapper.toDto(teamEntity));
 		Assertions.assertNotNull(teamDto.getId());
 	}
 
 	@Test
 	public void updateTeamShouldReturnTeamDTOWhenExistingId() {
+		Mockito.when(teamRepository.getReferenceById(existingId)).thenReturn(teamEntity);
+		Mockito.when(teamRepository.save(any())).thenReturn(teamEntity);
 		TeamDTO teamDto = teamService.updateTeam(existingId, TeamMapper.toDto(teamEntity));
 		Assertions.assertNotNull(teamDto.getId());
 	}
 
 	@Test
 	public void updateTeamShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(teamRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> teamService.updateTeam(nonExistingId, TeamMapper.toDto(teamEntity)));
 	}
 
 	@Test
 	public void deleteTeamShouldDoNothingWhenExistingId() {
+		Mockito.when(teamRepository.existsById(existingId)).thenReturn(true);
+		Mockito.when(employeeRepository.existsByTeamId(existingId)).thenReturn(false);
 		Assertions.assertDoesNotThrow(() -> teamService.deleteTeam(existingId));
 		Mockito.verify(teamRepository, times(1)).deleteById(any());
 	}
 
 	@Test
 	public void deleteTeamShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(teamRepository.existsById(nonExistingId)).thenReturn(false);
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> teamService.deleteTeam(nonExistingId));
 		Mockito.verify(teamRepository, never()).deleteById(any());
 	}
 
 	@Test
 	public void deleteTeamShouldThrowDataIntegrityExceptionWhenDependentId() {
+		Mockito.when(teamRepository.existsById(dependentId)).thenReturn(true);
+		Mockito.when(employeeRepository.existsByTeamId(dependentId)).thenReturn(true);
 		Assertions.assertThrows(DataIntegrityException.class, () -> teamService.deleteTeam(dependentId));
 		Mockito.verify(teamRepository, never()).deleteById(any());
 	}

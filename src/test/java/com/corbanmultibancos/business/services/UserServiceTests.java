@@ -15,11 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.corbanmultibancos.business.dto.UserCreateDTO;
 import com.corbanmultibancos.business.dto.UserDataDTO;
@@ -34,7 +34,7 @@ import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundExcept
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTests {
 
 	@InjectMocks
@@ -79,37 +79,24 @@ public class UserServiceTests {
 		userPage = new PageImpl<>(List.of(userEntity));
 		pageable = PageRequest.of(0, 10);
 		userCreateDto = new UserCreateDTO(existingId, "novo", "novo123", 1L);
-		Mockito.when(userRepository.findById(existingId)).thenReturn(Optional.of(userEntity));
-		Mockito.when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(userRepository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
-		Mockito.when(userRepository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
-		Mockito.when(userRepository.findAll(pageable)).thenReturn(userPage);
-		Mockito.when(userRepository.save(any())).thenReturn(userEntity);
-		Mockito.when(userRepository.getReferenceById(existingId)).thenReturn(userEntity);
-		Mockito.when(userRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
-		Mockito.when(userRepository.existsById(existingId)).thenReturn(true);
-		Mockito.when(userRepository.existsById(nonExistingId)).thenReturn(false);
-		Mockito.doNothing().when(userRepository).deleteById(existingId);
-		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
-		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(employeeRepository.save(any())).thenReturn(employee);
-		Mockito.when(roleRepository.findById(existingRoleId)).thenReturn(Optional.of(role));
-		Mockito.when(roleRepository.findById(nonExistingRoleId)).thenReturn(Optional.empty());
 	}
 
 	@Test
 	public void getUserByIdShouldReturnUserDTOWhenExistingId() {
+		Mockito.when(userRepository.findById(existingId)).thenReturn(Optional.of(userEntity));
 		UserDataDTO userDto = userService.getUserById(existingId);
 		Assertions.assertEquals(existingId, userDto.getEmployeeId());
 	}
 
 	@Test
 	public void getUserByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.getUserById(nonExistingId));
 	}
 
 	@Test
 	public void getUsersShouldReturnPageOfSingleUserDTOWhenExistingUsername() {
+		Mockito.when(userRepository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
 		Page<UserDataDTO> userDtoPage = userService.getUsers(existingUsername, pageable);
 		Assertions.assertEquals(1, userDtoPage.getSize());
 		Mockito.verify(userRepository, times(1)).findByUsername(any());
@@ -118,6 +105,7 @@ public class UserServiceTests {
 
 	@Test
 	public void getUsersShouldReturnEmptyPageWhenNonExistingUsername() {
+		Mockito.when(userRepository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
 		Page<UserDataDTO> userDtoPage = userService.getUsers(nonExistingUsername, pageable);
 		Assertions.assertTrue(userDtoPage.isEmpty());
 		Mockito.verify(userRepository, times(1)).findByUsername(any());
@@ -126,6 +114,7 @@ public class UserServiceTests {
 
 	@Test
 	public void getUsersShouldReturnPageOfUserDTOWhenNoParameter() {
+		Mockito.when(userRepository.findAll(pageable)).thenReturn(userPage);
 		Page<UserDataDTO> userDtoPage = userService.getUsers("", pageable);
 		Assertions.assertFalse(userDtoPage.isEmpty());
 		Mockito.verify(userRepository, never()).findByUsername(any());
@@ -134,6 +123,9 @@ public class UserServiceTests {
 
 	@Test
 	public void createUserShouldReturnUserDTOWhenExistingEmployee() {
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
+		Mockito.when(roleRepository.findById(existingRoleId)).thenReturn(Optional.of(role));
+		Mockito.when(userRepository.save(any())).thenReturn(userEntity);
 		UserDataDTO userDto = userService.createUser(userCreateDto);
 		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
@@ -141,35 +133,46 @@ public class UserServiceTests {
 	@Test
 	public void createUserShouldThrowResourceNotFoundExceptionWhenNonExistingEmployee() {
 		userCreateDto.setEmployeeId(nonExistingId);
+		Mockito.when(employeeRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.createUser(userCreateDto));
 	}
 
 	@Test
 	public void createUserShouldThrowResourceNotFoundExceptionWhenNonExistingRole() {
 		userCreateDto.setRoleId(nonExistingRoleId);
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
+		Mockito.when(roleRepository.findById(nonExistingRoleId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.createUser(userCreateDto));
 	}
 
 	@Test
 	public void updateUserShouldReturnUserDTOWhenExistingId() {
+		Mockito.when(userRepository.getReferenceById(existingId)).thenReturn(userEntity);
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
+		Mockito.when(roleRepository.findById(existingRoleId)).thenReturn(Optional.of(role));
+		Mockito.when(userRepository.save(any())).thenReturn(userEntity);
 		UserDataDTO userDto = userService.updateUser(existingId, userCreateDto);
 		Assertions.assertNotNull(userDto.getEmployeeId());
 	}
 
 	@Test
 	public void updateUserShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(userRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> userService.updateUser(nonExistingId, userCreateDto));
 	}
 
 	@Test
 	public void deleteUserShouldDoNothingWhenExistingId() {
+		Mockito.when(userRepository.existsById(existingId)).thenReturn(true);
+		Mockito.when(employeeRepository.findById(existingId)).thenReturn(Optional.of(employee));
 		Assertions.assertDoesNotThrow(() -> userService.deleteUser(existingId));
 		Mockito.verify(userRepository, times(1)).deleteById(any());
 	}
 
 	@Test
 	public void deleteUserShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(userRepository.existsById(nonExistingId)).thenReturn(false);
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(nonExistingId));
 		Mockito.verify(userRepository, never()).deleteById(any());
 	}

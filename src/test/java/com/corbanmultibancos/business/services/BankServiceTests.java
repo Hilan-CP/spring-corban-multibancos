@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.corbanmultibancos.business.dto.BankDTO;
 import com.corbanmultibancos.business.entities.Bank;
@@ -26,7 +26,7 @@ import com.corbanmultibancos.business.services.exceptions.ResourceNotFoundExcept
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class BankServiceTests {
 
 	@InjectMocks
@@ -57,31 +57,24 @@ public class BankServiceTests {
 		nonExistingName = "banco inexistente";
 		bankEntity = new Bank(existingId, existingCode, "PAN");
 		bankList = List.of(bankEntity);
-		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bankEntity));
-		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-		Mockito.when(bankRepository.findByCode(existingCode)).thenReturn(Optional.of(bankEntity));
-		Mockito.when(bankRepository.findByCode(nonExistingCode)).thenReturn(Optional.empty());
-		Mockito.when(bankRepository.findByName(partialName)).thenReturn(bankList);
-		Mockito.when(bankRepository.findByName(nonExistingName)).thenReturn(List.of());
-		Mockito.when(bankRepository.findAll()).thenReturn(bankList);
-		Mockito.when(bankRepository.save(any())).thenReturn(bankEntity);
-		Mockito.when(bankRepository.getReferenceById(existingId)).thenReturn(bankEntity);
-		Mockito.when(bankRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 	}
 
 	@Test
 	public void getBankByIdShouldReturnBankDTOWhenExistingId() {
+		Mockito.when(bankRepository.findById(existingId)).thenReturn(Optional.of(bankEntity));
 		BankDTO bankDto = bankService.getBankById(existingId);
 		Assertions.assertEquals(existingId, bankDto.getId());
 	}
 
 	@Test
 	public void getBankByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(bankRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 		Assertions.assertThrows(ResourceNotFoundException.class, () -> bankService.getBankById(nonExistingId));
 	}
 
 	@Test
 	public void getBanksShouldReturnListOfSingleBankDTOWhenExistingCode() {
+		Mockito.when(bankRepository.findByCode(existingCode)).thenReturn(Optional.of(bankEntity));
 		List<BankDTO> bankDtoList = bankService.getBanks(existingCode, "");
 		Assertions.assertEquals(1, bankDtoList.size());
 		Mockito.verify(bankRepository, times(1)).findByCode(any());
@@ -91,6 +84,7 @@ public class BankServiceTests {
 
 	@Test
 	public void getBanksShouldReturnEmptyListWhenNonExistingCode() {
+		Mockito.when(bankRepository.findByCode(nonExistingCode)).thenReturn(Optional.empty());
 		List<BankDTO> bankDtoList = bankService.getBanks(nonExistingCode, "");
 		Assertions.assertTrue(bankDtoList.isEmpty());
 		Mockito.verify(bankRepository, times(1)).findByCode(any());
@@ -100,6 +94,7 @@ public class BankServiceTests {
 
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenPartialName() {
+		Mockito.when(bankRepository.findByName(partialName)).thenReturn(bankList);
 		List<BankDTO> bankDtoList = bankService.getBanks(0, partialName);
 		Assertions.assertFalse(bankDtoList.isEmpty());
 		Mockito.verify(bankRepository, never()).findByCode(any());
@@ -109,6 +104,7 @@ public class BankServiceTests {
 
 	@Test
 	public void getBanksShouldReturnEmptyListWhenNonExistingName() {
+		Mockito.when(bankRepository.findByName(nonExistingName)).thenReturn(List.of());
 		List<BankDTO> bankDtoList = bankService.getBanks(0, nonExistingName);
 		Assertions.assertTrue(bankDtoList.isEmpty());
 		Mockito.verify(bankRepository, never()).findByCode(any());
@@ -118,6 +114,7 @@ public class BankServiceTests {
 
 	@Test
 	public void getBanksShouldReturnBankDTOListWhenNoParameter() {
+		Mockito.when(bankRepository.findAll()).thenReturn(bankList);
 		List<BankDTO> bankDtoList = bankService.getBanks(0, "");
 		Assertions.assertFalse(bankDtoList.isEmpty());
 		Mockito.verify(bankRepository, never()).findByCode(any());
@@ -132,18 +129,22 @@ public class BankServiceTests {
 
 	@Test
 	public void createBankShouldReturnBankDTO() {
+		Mockito.when(bankRepository.save(any())).thenReturn(bankEntity);
 		BankDTO bankDto = bankService.createBank(new BankDTO());
 		Assertions.assertNotNull(bankDto.getId());
 	}
 
 	@Test
 	public void updateBankShouldReturnBankDTOWhenExistingId() {
+		Mockito.when(bankRepository.getReferenceById(existingId)).thenReturn(bankEntity);
+		Mockito.when(bankRepository.save(any())).thenReturn(bankEntity);
 		BankDTO bankDto = bankService.updateBank(existingId, new BankDTO());
 		Assertions.assertEquals(existingId, bankDto.getId());
 	}
 
 	@Test
 	public void updateBankShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
+		Mockito.when(bankRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
 		Assertions.assertThrows(ResourceNotFoundException.class,
 				() -> bankService.updateBank(nonExistingId, new BankDTO()));
 	}
