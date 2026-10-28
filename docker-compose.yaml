@@ -38,7 +38,7 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
-    restart: always
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lfu
     volumes:
       - redis_data:/data
     networks:
