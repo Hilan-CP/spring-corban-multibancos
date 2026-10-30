@@ -39,6 +39,8 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Configuration
@@ -55,6 +57,9 @@ public class SecurityConfig {
 
 	@Value("${jwt.private.key}")
 	private RSAPrivateKey privateKey;
+
+	@Value("${app.token-issuer}")
+	private String tokenIssuer;
 
 	@Bean
 	@Order(1)
@@ -100,17 +105,19 @@ public class SecurityConfig {
 
 	@Bean
 	AuthorizationServerSettings authServerSettings() {
-		return AuthorizationServerSettings.builder().issuer("http://localhost:8080").build();
+		return AuthorizationServerSettings.builder().issuer(tokenIssuer).build();
 	}
 
 	@Bean
 	OAuth2TokenCustomizer<JwtEncodingContext> customizeToken() {
 		return jwtEncodingContext -> {
 			Authentication principal = jwtEncodingContext.getPrincipal();
-			String role = principal.getAuthorities().stream().findFirst().get().getAuthority();
+			String role = principal.getAuthorities().stream().findFirst().orElseThrow().getAuthority();
+			Set<String> scopes = new HashSet<>(jwtEncodingContext.getAuthorizedScopes());
+			scopes.add(role);
 			jwtEncodingContext.getClaims()
 					.subject(principal.getName())
-					.claim("scope", role + " openid");
+					.claim("scope", String.join(" ", scopes));
 		};
 	}
 }
