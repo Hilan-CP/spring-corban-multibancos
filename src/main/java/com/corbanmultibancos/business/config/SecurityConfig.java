@@ -113,22 +113,4 @@ public class SecurityConfig {
 					.claim("scope", role + " openid");
 		};
 	}
-
-	@Bean
-	RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
-		RegisteredClient client = RegisteredClient.withId(UUID.randomUUID().toString())
-				.clientId("corban-multibancos")
-				.clientSecret(passwordEncoder.encode("corban123"))
-				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
-				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-				.redirectUri("https://oauth.pstmn.io/v1/callback")
-				.redirectUri("http://localhost:8080")
-				.postLogoutRedirectUri("http://localhost:8080")
-				.scope(OidcScopes.OPENID)
-				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
-				.build();
-		return new InMemoryRegisteredClientRepository(client);
-	}
 }
